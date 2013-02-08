@@ -149,8 +149,8 @@ namespace bdd
 		{
 			node tmp;
 			tmp.var = vars[i];
-			tmp.l = uses[i] ? prev : 0;
-			tmp.r = uses[i] ? 0 : prev;
+			tmp.l = uses[i] ? 0 : prev;
+			tmp.r = uses[i] ? prev : 0;
 			prev = regnode(tmp);
 		}
 		return prev;
