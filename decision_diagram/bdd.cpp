@@ -113,6 +113,7 @@ namespace bdd
 	template<int mode>
 	int combine(int n1, int n2)
 	{
+		if (n1 == n2) return n1;
 		if (n1 == mode || n2 == mode) return mode;
 		if (n1 == 1-mode) return n2;
 		if (n2 == 1-mode) return n1;
@@ -140,7 +141,7 @@ namespace bdd
 		return combines[state] = regnode(tmp);
 	}
 
-	int create_term(int *vars, int *negates, int cnt)
+	int create_term(int *vars, int *uses, int cnt)
 	{
 		sort(vars, vars + cnt);
 		int prev = 1;
@@ -148,8 +149,8 @@ namespace bdd
 		{
 			node tmp;
 			tmp.var = vars[i];
-			tmp.l = negates[i] ? prev : 0;
-			tmp.r = negates[i] ? 0 : prev;
+			tmp.l = uses[i] ? prev : 0;
+			tmp.r = uses[i] ? 0 : prev;
 			prev = regnode(tmp);
 		}
 		return prev;
