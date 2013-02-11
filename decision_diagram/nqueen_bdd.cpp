@@ -67,6 +67,8 @@ namespace bdd
 		bdd::varCnt = varCnt;
 		node nfalse, ntrue;
 		nfalse.var = ntrue.var = -1;
+		nfalse.l = nfalse.r = -2;
+		ntrue.l = ntrue.r = -1;
 		regnode(nfalse);
 		regnode(ntrue);
 	}
