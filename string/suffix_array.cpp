@@ -30,6 +30,7 @@ namespace SuffixArrayMin
 			for (int i = 0; i < n; i++) if (o[i] >= h) t[p[r[o[i]-h]]++] = o[i]-h;
 			for (int i = 0, c = 0; i < n; i++) {
 				m[i] = c;
+				if (i+1 == n) break;
 				if (b[i] != b[i+1]) c++;
 				else if(t[i+1] >= n-h || t[i] >= n-h) c++;
 				else if(r[t[i+1] + h] != r[t[i]+h]) c++;
@@ -68,6 +69,7 @@ namespace SuffixArray
 			for (int i = 0; i < n; i++) if (out[i] >= h) temp[bpos[pos2bckt[out[i]-h]]++] = out[i]-h;
 			for (int i = 0, c = 0; i < n; i++) {
 				relabel[i] = c;
+				if (i+1 == n) break;
 				if (bckt[i] != bckt[i+1]) c++;
 				else if(temp[i+1] >= n-h || temp[i] >= n-h) c++;
 				else if(pos2bckt[temp[i+1] + h] != pos2bckt[temp[i]+h]) c++;
