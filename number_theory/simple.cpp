@@ -1,6 +1,10 @@
 #include <climits>
 #include <cmath>
+#include <vector>
 #include <algorithm>
+
+using namespace std;
+
 /* Calculate n^k mod m
  * Dependencies: none */
 long long power(long long n, long long k, long long m = LLONG_MAX) {
@@ -49,4 +53,17 @@ long long chinese_remainder(long long *a, long long *n, int size) {
 	n[1] /= n[0] / tgcd;
 	a[1] = ora;
 	return ret;
+}
+
+/* FactorInteger
+ * Dependencies: none */
+vector<pair<long long, int>> factorInteger(long long B) {
+	vector<pair<long long, int>> factors;
+	for(long long i = 2; i * i <= B; i++) {
+		int cnt = 0;
+		while(B % i == 0) { B /= i; cnt++; }
+		if (cnt > 0)  factors.emplace_back(i, cnt);
+	}
+	if (B>1) factors.emplace_back(B, 1);
+	return factors;
 }
