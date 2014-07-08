@@ -165,7 +165,8 @@ namespace HLDecompose
 			totalSize += group[i].size();
 		}
 	}
-	
+
+	// examples
 	void RangeEdgesQuery(int a, int b) {
 		int lca = getLCA(a,b);
 		updateRange(lca, a, true);
