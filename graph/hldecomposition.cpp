@@ -2,6 +2,7 @@
 #include <vector>
 #include <algorithm>
 #include <climits>
+#include <memory.h>
 
 using namespace std;
 
@@ -12,10 +13,13 @@ usage:
 HLDecompose::Init();
 HLDecompose::Decompose();
 
-HLDecompose::RangeEdges(a, b) // query index tree (querie edge values between a~>b)
-HLDecompose::RangeVertices(a, b) // query index tree (querie node values between a~>b (inclusive))
+HLDecompose::RangeEdges(a, b) // query index tree (edge values between a~>b)
+HLDecompose::RangeVertices(a, b) // query index tree (vertex values between a~>b (inclusive))
 
 implement "clearIndexTree(), queryIndexTree(), querySingleIndexTree()"
+clearIndexTree(): initialize index tree
+queryIndexTree(): update/get range value
+querySingleIndexTree(): update/get single value
 */
 namespace HLDecompose
 {
@@ -50,6 +54,19 @@ namespace HLDecompose
 
 	// indextree
 	val_t itree[BT*2];
+
+	void clearIndexTree() {
+		//TODO:
+	}
+
+	void queryIndexTree(int l, int r) {
+		//TODO:
+	}
+
+	void querySingleIndexTree(int p) {
+		//TODO:
+	}
+
 	// indextree
 
 	int getLCA(int a, int b) {
@@ -106,23 +123,23 @@ namespace HLDecompose
 		}
 	}
 
-	void updateRange(int exL, int inR, bool isEdgeRange) {
-		while(groupNum[exL] != groupNum[inR]){
-			int curGroup = groupNum[inR];
+	void updateRange(int L, int R, bool excludeLeft) {
+		while(groupNum[L] != groupNum[R]){
+			int curGroup = groupNum[R];
 			int baseIndex = groupStart[curGroup];
 
-			queryIndexTree(baseIndex, baseIndex + indexInGroup[inR]);
+			queryIndexTree(baseIndex, baseIndex + indexInGroup[R]);
 
 			int groupParentNode = parentLCA[group[curGroup][0]][0];
-			if (isEdgeRange && groupParentNode == exL) { // 특수 케이스
+			if (excludeLeft && groupParentNode == L) {
 				return;
 			}
-			inR = groupParentNode;
+			R = groupParentNode;
 		}
 		{
-			int curGroup = groupNum[inR];
+			int curGroup = groupNum[R];
 			int baseIndex = groupStart[curGroup];
-			queryIndexTree(baseIndex + indexInGroup[exL] + (isEdgeRange ? 1 : 0), baseIndex + indexInGroup[inR]);
+			queryIndexTree(baseIndex + indexInGroup[L] + (excludeLeft ? 1 : 0), baseIndex + indexInGroup[R]);
 		}
 	}
 	
@@ -147,27 +164,27 @@ namespace HLDecompose
 		}
 	}
 	
-	void RangeEdges(int a, int b) {
+	void RangeEdgesQuery(int a, int b) {
 		int lca = getLCA(a,b);
 		updateRange(lca, a, true);
 		updateRange(lca, b, true);
 	}
 
-	void RangeVertices(int a, int b) {
+	void RangeVerticesQuery(int a, int b) {
 		int lca = getLCA(a,b);
 		updateRange(lca, a, false); // include lca this time.
 		updateRange(lca, b, true); // exclude lca this time.
 	}
 
-	void PinPointEdge(int a, int b) {
+	auto SingleEdgeQuery(int a, int b) -> decltype(querySingleIndexTree(a)){
 		int childNode = depthLCA[a] > depthLCA[b] ? a : b;
 		int itreeIndex = groupStart[groupNum[childNode]] + indexInGroup[childNode];
-		querySingleIndexTree(itreeIndex);
+		return querySingleIndexTree(itreeIndex);
 	}
 
-	void PinPointVertex(int a) {
+	auto SingleVertexQuery(int a) -> decltype(querySingleIndexTree(a)) {
 		int itreeIndex = groupStart[groupNum[a]] + indexInGroup[a];
-		querySingleIndexTree(itreeIndex);
+		return querySingleIndexTree(itreeIndex);
 	}
 }
 
