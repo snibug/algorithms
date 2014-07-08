@@ -60,6 +60,7 @@ namespace HLDecompose
 	}
 
 	void queryIndexTree(int l, int r) {
+		if (l > r) return;
 		//TODO:
 	}
 
@@ -124,6 +125,7 @@ namespace HLDecompose
 	}
 
 	void updateRange(int L, int R, bool excludeLeft) {
+		// assertion: L is R's ancestor node
 		while(groupNum[L] != groupNum[R]){
 			int curGroup = groupNum[R];
 			int baseIndex = groupStart[curGroup];
