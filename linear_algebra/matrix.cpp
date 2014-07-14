@@ -1,3 +1,7 @@
+// tested problems:
+//  Codeforces #FF DZY Loves Games (multiply, power, inverse)
+//  SRM 425 Hard RoadsOfKingdom (determinant)
+//  SRM 396 Hard MoreNim (rowechelonform)
 #include <cmath>
 
 using namespace std;
