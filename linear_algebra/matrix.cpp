@@ -128,13 +128,13 @@ struct SqMatrix
 				elem_t maxValue = 0;
 				int maxInd = -1;
 				for(int j = i+1; j < n; j++) {
-					auto cur = abs(A[j][i]);
+					auto cur = abs(A[j][entryColumn]);
 					if (maxValue < cur) {
 						maxValue = cur;
 						maxInd = j;
 					}
 				}
-				if (maxInd == -1 || isZero(A[maxInd][i])) continue;
+				if (maxInd == -1 || isZero(A[maxInd][entryColumn])) continue;
 				for(int k = 0; k < m; k++) A[i][k] = add(A[i][k], A[maxInd][k]);
 				break;
 			}
@@ -166,13 +166,13 @@ struct SqMatrix
 				elem_t maxValue = 0;
 				int maxInd = -1;
 				for(int j = i+1; j < n; j++) {
-					auto cur = abs(A[j][i]);
+					auto cur = abs(A[j][entryColumn]);
 					if (maxValue < cur) {
 						maxValue = cur;
 						maxInd = j;
 					}
 				}
-				if (maxInd == -1 || isZero(A[maxInd][i])) {
+				if (maxInd == -1 || isZero(A[maxInd][entryColumn])) {
 					root.emplace_back(true, 0);
 					continue;
 				}
