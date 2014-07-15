@@ -1,18 +1,25 @@
-#include <stdio.h>
+#include <cstdio>
+#include <limits>
+#include <vector>
 #include <climits>
 #include <algorithm>
 
 using namespace std;
 
+// Tests
+// http://www.spoj.com/problems/GREED/
+// https://www.acmicpc.net/problem/8992
 namespace hung
 {
+	typedef int cost_t;
+	cost_t MAX_COST = numeric_limits<cost_t>::max()/2;
 	// input: n, dat(which is NOT const)
 	// output: call solve(), match, matched
 	// minimum matching 계산이다.
-	const int MAX_N = 190;
+	const int MAX_N = 500;
 
 	int n, match[MAX_N], matched[MAX_N];
-	int dat[MAX_N][MAX_N];
+	cost_t dat[MAX_N][MAX_N];
 	int q[MAX_N], v[MAX_N], vcnt;
 	int f[MAX_N], reach[MAX_N], reach2[MAX_N], rcnt;
 
@@ -45,15 +52,15 @@ namespace hung
 		return 0;
 	}
 
-	int solve() {
-		int ans = 0;
+	cost_t solve() {
+		cost_t ans = 0;
 		for(int i=0;i<n;i++) match[i] = matched[i] = -1;
 		for(int i=0;i<n;i++) {
-			int minv = *min_element(dat[i],dat[i]+n);
+			cost_t minv = *min_element(dat[i],dat[i]+n);
 			for(int j = 0;j < n;j++) dat[i][j] -= minv;
 			ans += minv;
-			minv = INT_MAX;
-			for(int j=0;j<n;j++) minv = min(minv, dat[j][i]);
+			minv = dat[0][i];
+			for(int j=1;j<n;j++) minv = min(minv, dat[j][i]);
 			for(int j=0;j<n;j++) dat[j][i] -= minv;
 			ans += minv;
 		}
@@ -65,7 +72,7 @@ namespace hung
 				if (!augment(i)) needMore = true;
 			}
 			if(!needMore) break;
-			int minv = INT_MAX;
+			cost_t minv = MAX_COST;
 			for(int i=0;i<n;i++) {
 				if (reach[i]!=rcnt) continue;
 				for(int j=0;j<n; j++) {
