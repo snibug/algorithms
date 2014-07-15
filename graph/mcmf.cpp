@@ -7,7 +7,12 @@
 
 using namespace std;
 
-// without negative cost
+// precondition: there is no negative cycle.
+// usage:
+//  MCMF::init(n);
+//  for(each edges) MCMF::addEdge(from, to, capacity, cost);
+//  if (negative cost edges were added) MCMF::normalizeNegativeEdges(source);
+//  MCMF::solve(source, sink);
 namespace MCMF
 {
 	typedef int cap_t;
@@ -39,6 +44,11 @@ namespace MCMF
 		n = _n;
 		graph.clear(); graph.resize(n);
 		pi.clear(); pi.resize(n);
+
+		dist.resize(n);
+		mincap.resize(n);
+		from.resize(n);
+		v.resize(n);
 	}
 
 	void addEdge(int a, int b, cap_t cap, cost_t cost) {
@@ -48,10 +58,36 @@ namespace MCMF
 		graph[b].push_back(backward);
 	}
 
+	// returns false if there is a negative cycle.
+	bool normalizeNegativeEdges(int s){
+		fill(dist.begin(),dist.end(),COST_MAX);
+		memset(&v[0], 0, n*sizeof(v[0]));
+		dist[s] = 0;
+		queue<int> q;
+		vector<int> relaxed(n);
+		v[s] = 1; q.push(s);
+		while(!q.empty()) {
+			int cur = q.front();
+			v[cur] = 0; q.pop();
+			if (++relaxed[cur] >= n) return false;
+			for(const auto &edge : graph[cur]) {
+				if (isZeroCap(edge.cap)) continue;
+				int next = edge.target;
+				cost_t nextDist = dist[cur] + edge.cost;
+				if (dist[next] > nextDist) {
+					dist[next] = nextDist;
+					if (v[next]) continue;
+					v[next] = 1; q.push(next);
+				}
+			}
+		}
+		for(int i = 0; i < n; i++) pi[i] = dist[i];
+		return true;
+	}
+
 	bool dijkstra(int s, int t) {
 		typedef pair<cost_t, int> pq_t;
 		priority_queue<pq_t, vector<pq_t>, greater<pq_t>> pq;
-		dist.resize(n); mincap.resize(n); from.resize(n); v.resize(n);
 		fill(dist.begin(),dist.end(),COST_MAX);
 		memset(&from[0], -1, n*sizeof(from[0]));
 		memset(&v[0], 0, n*sizeof(v[0]));
@@ -102,3 +138,4 @@ namespace MCMF
 		return make_pair(total_flow, total_cost);
 	}
 }
+
