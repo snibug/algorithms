@@ -119,3 +119,33 @@ vector<pair<unsigned long long, int>> factorInteger(unsigned long long B) {
 	return factors;
 }
 
+namespace Primality {
+	bool testWitness(uint64_t a, uint64_t n, uint64_t s) {
+		if (a >= n) a %= n;
+		if (a <= 1) return true;
+		uint64_t d = n>>s;
+		uint64_t x = power(a,d,n);
+		if (x == 1 || x == n-1) return true;
+		while(s-->1) {
+			x = large_mod_mul(x,x,n);
+			if (x == 1) return false;
+			if (x == n-1) return true;
+		}
+		return false;
+	}
+
+	bool IsPrime(uint64_t n) {
+		if (n == 2) return true;
+		if (n < 2 || n%2 == 0) return false;
+
+		uint64_t d = n>>1, s = 1;
+		for(;(d&1) == 0;s++) d>>=1;
+
+#define T(a) testWitness(a##ull, n, s)
+		if (n < 341531ull) return T(9345883071009581737);
+		if (n < 1050535501ull) return T(336781006125) && T(9639812373923155);
+		if (n < 350269456337ull) return T(4230279247111683200) && T(14694767155120705706) && T(16641139526367750375);
+		return T(2) && T(325) && T(9375) && T(28178) && T(450775) && T(9780504) && T(1795265022);
+#undef T
+	}
+}
