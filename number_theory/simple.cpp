@@ -1,20 +1,71 @@
 #include <climits>
 #include <cmath>
+#include <cstdint>
 #include <vector>
 #include <algorithm>
 
 using namespace std;
 
+/* (a+b)%m */
+uint64_t large_mod_add(uint64_t a, uint64_t b, uint64_t m) {
+	// assumption: 0 <= a < m, 0 <= b < m, m > 0
+	if (m <= (1ull<<63)) {
+		return (a+b)%m;
+	}
+	uint64_t s = (a+b)%m;
+	bool overflow = b && (a >= -b); // a + b >= 2^64
+	if (!overflow) return s;
+	// 0 <= s < m
+	// m < s+2^64 < 3m
+	// 0 < s+(2^64-m) < 2m
+	// overflow condition: s+(2^64-m) >= 2^64 <=> s >= m, contradiction
+	return (s-m)%m;
+}
+
+/* (a-b)%m */
+uint64_t large_mod_sub(uint64_t a, uint64_t b, uint64_t m) {
+	// assumption: 0 <= a < m, 0 <= b < m, m > 0
+	if (a > b) return a - b;
+	else if (a == b) return 0;
+	else return m - b + a;
+}
+
+/* (a*b)%m */
+uint64_t large_mod_mul(uint64_t a, uint64_t b, uint64_t m) {
+	// assumption: 0 <= a < m, 0 <= b < m, m > 0
+	if (m <= (1ull<<32)) {
+		return a*b%m;
+	}
+	if (a > b) swap(a,b);
+	if (a == 0) return 0;
+	uint64_t r = 0;
+	while(a>1) {
+		if (a & 1) r = large_mod_add(r, b, m);
+		b = large_mod_add(b, b, m);
+		a >>= 1;
+	}
+	return large_mod_add(b, r, m);
+}
+
 /* Calculate n^k mod m
- * Dependencies: none */
-long long power(long long n, long long k, long long m = LLONG_MAX) {
-	long long ret = 1;
+ * Dependencies: large_mod_add, large_mod_mul */
+uint64_t power(uint64_t n, uint64_t k, uint64_t m) {
+	uint64_t ret = 1;
+	n %= m;
 	while (k) {
-		if (k & 1) ret = (ret * n) % m;
-		n = (n * n) % m;
+		if (k & 1) ret = large_mod_mul(ret, n, m);
+		n = large_mod_mul(n, n, m);
 		k >>= 1;
 	}
 	return ret;
+}
+
+/* Calculate n^k mod m
+ * Dependencies: large_mod_add, large_mod_mul, power */
+long long power(long long n, long long k, long long m) {
+	if (m < 0) m = -m;
+	n %= m; if (n < 0) n += m;
+	return power((uint64_t)n, (uint64_t)k, (uint64_t)m);
 }
 
 /* Calculate gcd(a,b)
@@ -57,9 +108,9 @@ long long chinese_remainder(long long *a, long long *n, int size) {
 
 /* FactorInteger
  * Dependencies: none */
-vector<pair<long long, int>> factorInteger(long long B) {
-	vector<pair<long long, int>> factors;
-	for(long long i = 2; i * i <= B; i++) {
+vector<pair<unsigned long long, int>> factorInteger(unsigned long long B) {
+	vector<pair<unsigned long long, int>> factors;
+	for(unsigned long long i = 2; i <= B / i; i++) {
 		int cnt = 0;
 		while(B % i == 0) { B /= i; cnt++; }
 		if (cnt > 0)  factors.emplace_back(i, cnt);
@@ -67,3 +118,4 @@ vector<pair<long long, int>> factorInteger(long long B) {
 	if (B>1) factors.emplace_back(B, 1);
 	return factors;
 }
+
