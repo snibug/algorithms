@@ -119,6 +119,15 @@ vector<pair<unsigned long long, int>> factorInteger(unsigned long long B) {
 	return factors;
 }
 
+template<typename mod_t>
+vector<mod_t> range_mod_inverse(int n, mod_t mod){
+	vector<mod_t> ret(n+1);
+	ret[1] = 1;
+	for(int i = 2; i <= n; i++)
+		ret[i] = large_mod_mul(mod - mod/i, ret[mod%i], mod);
+	return ret;
+}
+
 namespace Primality {
 	bool testWitness(uint64_t a, uint64_t n, uint64_t s) {
 		if (a >= n) a %= n;
