@@ -98,6 +98,8 @@ namespace MCMF
 			int cur = pq.top().second; pq.pop();
 			if (v[cur]) continue;
 			v[cur] = 1;
+			// do not relax from sink node. but continue computing shortest distances for the pi computation.
+			if (cur == t) continue;
 			for (const auto &edge : graph[cur]) {
 				int next = edge.target;
 				if (v[next]) continue;
