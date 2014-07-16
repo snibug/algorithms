@@ -1,6 +1,9 @@
 // Tests
 // http://codeforces.com/contest/429/problem/D (CF#245 Tricky Function)
 
+// O(n log^2 n) implementation.
+// pass y-sorted vector<point> as argument in order to cut the time complexity down to O(n log n)
+
 #include <algorithm>
 #include <vector>
 
