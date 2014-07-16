@@ -13,6 +13,20 @@ using namespace std;
 
 namespace hung
 {
+	/*
+	 * alternative cost_t example
+	 *
+	typedef pair<int,int> cost_t;
+	cost_t MAX_COST = make_pair(2,0);
+	pair<int,int> &operator += (pair<int,int> &a, const pair<int,int> &b) {
+		a.first += b.first; a.second += b.second;
+		return a;
+	}
+	pair<int,int> &operator -= (pair<int,int> &a, const pair<int,int> &b) {
+		a.first -= b.first; a.second -= b.second;
+		return a;
+	}
+	*/
 	typedef int cost_t;
 	cost_t MAX_COST = numeric_limits<cost_t>::max()/2;
 	// input: n, dat(which is NOT const)
