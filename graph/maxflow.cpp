@@ -14,6 +14,10 @@ using namespace std;
 // MaxFlowDinic::AddEdge(1, 2, 100); // directional edge
 // result = MaxFlowDinic::Solve(0, 2); // source -> sink
 // graph[i][edgeIndex].res -> residual
+//
+// in order to find out the minimum cut, use `l'.
+// if l[i] == 0, i is unrechable.
+
 struct MaxFlowDinic
 {
 	typedef long long flow_t;
