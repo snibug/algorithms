@@ -7,6 +7,11 @@
 
 using namespace std;
 
+// tests
+// Kaka's matrix travel (POJ)
+// https://www.acmicpc.net/problem/8992
+// SRM 506 mid
+
 // precondition: there is no negative cycle.
 // usage:
 //  MCMF::init(n);

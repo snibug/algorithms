@@ -9,6 +9,8 @@ using namespace std;
 // Tests
 // http://www.spoj.com/problems/GREED/
 // https://www.acmicpc.net/problem/8992
+// SRM 506 mid
+
 namespace hung
 {
 	typedef int cost_t;
