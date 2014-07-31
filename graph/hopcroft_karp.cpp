@@ -1,4 +1,63 @@
 // in: n, m, graph
+// out: match, matched
+struct HK
+{
+	HK(int n, int m) : n(n), m(m), graph(n), match(n), matched(m), depth(n), q(n), v(n) { }
+	
+	int n, m;
+	vector<vector<int>> graph;
+	vector<int> match, matched, depth, q, v;
+	int vcnt;
+	bool BFS(){
+		int t = 0;
+		for(int i = 0; i < n; i++)
+			if (match[i] == -1) depth[i] = 0, q[t++] = i;
+			else depth[i] = -1;
+		for(int h = 0; h < t; h++) {
+			int cur = q[h];
+			int curDepth = depth[cur];
+			for(int i = 0; i < graph[cur].size(); i++) {
+				int adj = graph[cur][i];
+				if (matched[adj] == -1)
+					return true;
+				int next = matched[adj];
+				if (depth[next] != -1) continue;
+				depth[next] = curDepth + 1, q[t++] = next;
+			}
+		}
+		return false;
+	}
+
+	bool DFS(int nod) {
+		v[nod] = vcnt;
+		for(int i = 0; i < graph[nod].size(); i++) {
+			int adj = graph[nod][i];
+			int next = matched[adj];
+			if (next >= 0 && (v[next] == vcnt || depth[next] != depth[nod] + 1))
+				continue;
+			if (next == -1 || DFS(next)) {
+				match[nod] = adj;
+				matched[adj] = nod;
+				return true;
+			}
+		}
+		return false;
+	}
+
+	int Match()
+	{
+		fill(match.begin(),match.end(), -1);
+		fill(matched.begin(),matched.end(), -1);
+		int ans = 0;
+		while(BFS()) {
+			++vcnt;
+			for(int i = 0; i < n; i++) if (depth[i] == 0 && DFS(i)) ans++;
+		}
+		return ans;
+	}
+};
+
+// in: n, m, graph
 // out: match
 namespace HopcroftKarp
 {
@@ -57,4 +116,5 @@ namespace HopcroftKarp
 		return ans;
 	}
 }
+
 
