@@ -170,3 +170,17 @@ namespace Primality {
 
 
 
+/* Solve a*x === b (mod m)
+ *
+ * precondition: 0 <= a, b < m
+ * (x, M) if x (mod M) satisfies
+ * (-1,-1) for no solution */
+pair<long long, long long> SolveAXB(long long a, long long b, long long m) {
+	if (a == 0) {
+		if (b == 0) return make_pair(0, 1);
+		return make_pair(-1, -1);
+	}
+	long long g = gcd(a, m);
+	if (b % g) return make_pair(-1, -1);
+	return make_pair(((b/g) * modinverse(a/g, m/g))%m, m/g);
+}
