@@ -119,6 +119,8 @@ vector<pair<unsigned long long, int>> factorInteger(unsigned long long B) {
 	return factors;
 }
 
+/* range modular inverse.
+ * useful for inverse factorial calculation */
 template<typename mod_t>
 vector<mod_t> range_mod_inverse(int n, mod_t mod){
 	vector<mod_t> ret(n+1);
@@ -158,3 +160,6 @@ namespace Primality {
 #undef T
 	}
 }
+
+
+
