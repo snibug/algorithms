@@ -91,19 +91,26 @@ long long modinverse(long long a, long long m) {
 
 
 /* find x s.t. x ≡ a[i] (mod n[i])
- * Dependencies: modinverse(a, m)*/
-long long chinese_remainder(long long *a, long long *n, int size) {
-	if (size == 1) return *a;
-	long long tmp = modinverse(n[0], n[1]);
-	long long tmp2 = (tmp * (a[1] - a[0]) % n[1] + n[1]) % n[1];
-	long long ora = a[1];
-	long long tgcd = gcd(n[0],n[1]);
-	a[1] = a[0] + n[0] / tgcd * tmp2;
-	n[1] *= n[0] / tgcd;
-	long long ret = chinese_remainder(a + 1, n + 1, size - 1);
-	n[1] /= n[0] / tgcd;
-	a[1] = ora;
-	return ret;
+ *
+ * precondition: 0 <= a[i] < n[i]
+ * (x, N) if x (mod N) satisfies.
+ * (-1, -1) if none*/
+pair<long long, long long> chinese_remainder(vector<long long> a, vector<long long> n) {
+	pair<long long, long long> res(a[0], n[0]);
+	for(int i = 1; i < a.size(); i++){
+		auto g = gcd(res.second, n[i]);
+		auto q = (a[i] - res.first) / g;
+		if ((a[i] - res.first) % g) {
+			res = make_pair(-1,-1);
+			break;
+		}
+		auto b = modinverse(res.second / g, n[i] / g) * q;
+		res.first += res.second * b;
+		res.second = res.second / g * n[i];
+		res.first %= res.second;
+		if (res.first < 0) res.first += res.second;
+	}
+	return res;
 }
 
 /* FactorInteger
