@@ -20,7 +20,7 @@ vector<point> convexHull(vector<point> dat) {
 		upper.emplace_back(dat[i]);
 		lower.emplace_back(dat[i]);
 	}
-	upper.insert(upper.end(), ++lower.begin(), --lower.end());
+	upper.insert(upper.end(), ++lower.rbegin(), --lower.rend());
 	return upper;
 }
 
