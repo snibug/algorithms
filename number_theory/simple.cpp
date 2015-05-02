@@ -89,6 +89,25 @@ long long modinverse(long long a, long long m) {
 	return (extended_gcd(a, m).first % m + m) % m;
 }
 
+long long chinese_remainder_two(long long a1, long long n1, long long a2, long long n2)
+{
+	return large_mod_mul(a1, n2 * modinverse(n2, n1), n1 * n2) + a2 * n1 * modinverse(n1, n2);
+}
+
+pair<long long, long long> chinese_remainder(vector<long long> a, vector<long long> n) {
+	pair<long long, long long> res(a[0], n[0]);
+	for(int i = 1; i < a.size(); i++){
+		auto g = gcd(res.second, n[i]);
+		if ((a[i] - res.first) % g) {
+			res = make_pair(-1,-1);
+			break;
+		}
+		res.first = chinese_remainder_two(res.first / g, res.second / g, a[i] / g, n[i] / g) * g + a[i] % g;
+		res.second = res.second / g * n[i];
+		res.first %= res.second;
+	}
+	return res;
+}
 
 /* FactorInteger
  * Dependencies: none */
