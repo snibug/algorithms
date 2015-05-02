@@ -90,29 +90,6 @@ long long modinverse(long long a, long long m) {
 }
 
 
-/* find x s.t. x ≡ a[i] (mod n[i])
- *
- * precondition: 0 <= a[i] < n[i]
- * (x, N) if x (mod N) satisfies.
- * (-1, -1) if none*/
-pair<long long, long long> chinese_remainder(vector<long long> a, vector<long long> n) {
-	pair<long long, long long> res(a[0], n[0]);
-	for(int i = 1; i < a.size(); i++){
-		auto g = gcd(res.second, n[i]);
-		auto q = (a[i] - res.first) / g;
-		if ((a[i] - res.first) % g) {
-			res = make_pair(-1,-1);
-			break;
-		}
-		auto b = modinverse(res.second / g, n[i] / g) * q;
-		res.first += res.second * b;
-		res.second = res.second / g * n[i];
-		res.first %= res.second;
-		if (res.first < 0) res.first += res.second;
-	}
-	return res;
-}
-
 /* FactorInteger
  * Dependencies: none */
 vector<pair<unsigned long long, int>> factorInteger(unsigned long long B) {
