@@ -61,39 +61,43 @@ sample operation:
 			auto rm = (rs+re)/2;
 			/* propagate pending values to children */
 			left.pending += cur.pending;/* TODO: edit here */
+			left.value += cur.pending;/* TODO: edit here */
 			right.pending += cur.pending;/* TODO: edit here */
+			right.value += cur.pending;/* TODO: edit here */
 		}
-		/* accept pending */
-		cur.value += cur.pending;/* TODO: edit here */
 		/* clear pending */
 		cur.pending = 0;/* TODO: edit here */
 	}
 	void update(index_t s, index_t e, val_t value, index_t p, index_t rs, index_t re) {
-		if (rs >= e || s >= re) return;
-		if (s <= rs && re <= e) {
-			auto &cur = tree[p];
+		if (s >= e) return;
+		auto &cur = tree[p];
+		if (s == rs && re == e) {
 			/* put value on pending */
 			cur.pending += value;/* TODO: edit here */
+			cur.value += value;/* TODO: edit here */
 			return;
 		}
+		auto rm = (rs+re)/2;
+		auto &left = tree[p*2], &right = tree[p*2+1];
 		propagate(p, rs, re);
-		update(s, e, value, p*2+0, rs, (rs+re)/2);
-		update(s, e, value, p*2+1, (rs+re)/2, re);
+		update(max(rs, s), min(rm, e), value, p*2+0, rs, rm);
+		update(max(rm, s), min(re, e), value, p*2+1, rm, re);
+		/* update value */
+		cur.value = max(left.value, right.value); /* TODO: edit here */
 	}
 	void update(index_t s, index_t e, val_t value) { return update(s, e, value, 1, 0, base); }
 	val_t get(index_t s, index_t e, index_t p, index_t rs, index_t re) {
-		/* out of range */
-		if (rs >= e || s >= re) return numeric_limits<val_t>::min(); /* TODO: edit here. */
+		if (s >= e) return numeric_limits<val_t>::min(); /* TODO: edit here. */
 		propagate(p, rs, re);
 
 		/* range fitted */
 		if (s <= rs && re <= e) {
 			auto &cur = tree[p];
-			/* return the current value */
 			return cur.value; /* TODO: edit here */
 		}
-		auto left_value = get(s, e, p*2+0, rs, (rs+re)/2);
-		auto right_value = get(s, e, p*2+1, (rs+re)/2, re);
+		auto rm = (rs+re)/2;
+		auto left_value  = get(max(rs, s), min(rm, e), p*2+0, rs, rm);
+		auto right_value = get(max(rm, s), min(re, e), p*2+1, rm, re);
 
 		/* combine values from left and right */
 		return max(left_value, right_value); /* TODO: edit here */
