@@ -6,62 +6,21 @@
 
 using namespace std;
 
-/* (a+b)%m */
-uint64_t large_mod_add(uint64_t a, uint64_t b, uint64_t m) {
-	// assumption: 0 <= a < m, 0 <= b < m, m > 0
-	if (m <= (1ull<<63)) {
-		return (a+b)%m;
-	}
-	uint64_t s = (a+b)%m;
-	bool overflow = b && (a >= -b); // a + b >= 2^64
-	if (!overflow) return s;
-	// 0 <= s < m
-	// m < s+2^64 < 3m
-	// 0 < s+(2^64-m) < 2m
-	// overflow condition: s+(2^64-m) >= 2^64 <=> s >= m, contradiction
-	return (s-m)%m;
-}
-
-/* (a-b)%m */
-uint64_t large_mod_sub(uint64_t a, uint64_t b, uint64_t m) {
-	// assumption: 0 <= a < m, 0 <= b < m, m > 0
-	if (a > b) return a - b;
-	else if (a == b) return 0;
-	else return m - b + a;
-}
-
-/* (a*b)%m */
-uint64_t large_mod_mul(uint64_t a, uint64_t b, uint64_t m) {
-	// assumption: 0 <= a < m, 0 <= b < m, m > 0
-	if (m <= (1ull<<32)) {
-		return a*b%m;
-	}
-	if (a > b) swap(a,b);
-	if (a == 0) return 0;
-	uint64_t r = 0;
-	while(a>1) {
-		if (a & 1) r = large_mod_add(r, b, m);
-		b = large_mod_add(b, b, m);
-		a >>= 1;
-	}
-	return large_mod_add(b, r, m);
-}
-
 /* Calculate n^k mod m
- * Dependencies: large_mod_add, large_mod_mul */
+ * Dependencies: none */
 uint64_t power(uint64_t n, uint64_t k, uint64_t m) {
 	uint64_t ret = 1;
 	n %= m;
 	while (k) {
-		if (k & 1) ret = large_mod_mul(ret, n, m);
-		n = large_mod_mul(n, n, m);
+		if (k & 1) ret = (ret * n % m);
+		n = (n * n % m);
 		k >>= 1;
 	}
 	return ret;
 }
 
 /* Calculate n^k mod m
- * Dependencies: large_mod_add, large_mod_mul, power */
+ * Dependencies: none */
 long long power(long long n, long long k, long long m) {
 	if (m < 0) m = -m;
 	n %= m; if (n < 0) n += m;
@@ -89,26 +48,6 @@ long long modinverse(long long a, long long m) {
 	return (extended_gcd(a, m).first % m + m) % m;
 }
 
-long long chinese_remainder_two(long long a1, long long n1, long long a2, long long n2)
-{
-	return large_mod_mul(a1, n2 * modinverse(n2, n1), n1 * n2) + a2 * n1 * modinverse(n1, n2);
-}
-
-pair<long long, long long> chinese_remainder(vector<long long> a, vector<long long> n) {
-	pair<long long, long long> res(a[0], n[0]);
-	for(int i = 1; i < a.size(); i++){
-		auto g = gcd(res.second, n[i]);
-		if ((a[i] - res.first) % g) {
-			res = make_pair(-1,-1);
-			break;
-		}
-		res.first = chinese_remainder_two(res.first / g, res.second / g, a[i] / g, n[i] / g) * g + a[i] % g;
-		res.second = res.second / g * n[i];
-		res.first %= res.second;
-	}
-	return res;
-}
-
 /* FactorInteger
  * Dependencies: none */
 vector<pair<unsigned long long, int>> factorInteger(unsigned long long B) {
@@ -124,13 +63,42 @@ vector<pair<unsigned long long, int>> factorInteger(unsigned long long B) {
 
 /* range modular inverse.
  * useful for inverse factorial calculation */
-template<typename mod_t>
-vector<mod_t> range_mod_inverse(int n, mod_t mod){
-	vector<mod_t> ret(n+1);
+vector<int> range_mod_inverse(int n, const int mod){
+	vector<int> ret(n+1);
 	ret[1] = 1;
 	for(int i = 2; i <= n; i++)
-		ret[i] = large_mod_mul(mod - mod/i, ret[mod%i], mod);
+		ret[i] = (long long) (mod - mod/i) * ret[mod%i] % mod;
 	return ret;
+}
+
+
+/* (a+b)%m */
+uint64_t large_mod_add(uint64_t a, uint64_t b, uint64_t m) {
+	// assumption: 0 <= a < m, 0 <= b < m, m > 0
+	if (m <= (1ull<<63)) {
+		return (a+b)%m;
+	}
+	uint64_t s = (a+b)%m;
+	bool overflow = b && (a >= -b); // a + b >= 2^64
+	if (!overflow) return s;
+	// 0 <= s < m
+	// m < s+2^64 < 3m
+	// 0 < s+(2^64-m) < 2m
+	// overflow condition: s+(2^64-m) >= 2^64 <=> s >= m, contradiction
+	return (s-m)%m;
+}
+
+/* (a-b)%m */
+uint64_t large_mod_sub(uint64_t a, uint64_t b, uint64_t m) {
+	// assumption: 0 <= a < m, 0 <= b < m, m > 0
+	if (a > b) return a - b;
+	else if (a == b) return 0;
+	else return m - b + a;
+}
+
+/* (a*b)%m */
+uint64_t large_mod_mul(unsigned __int128 a, unsigned __int128 b, unsigned __int128 m) {
+	return a*b%m;
 }
 
 namespace Primality {
@@ -163,7 +131,6 @@ namespace Primality {
 #undef T
 	}
 }
-
 
 
 /* Solve a*x === b (mod m)
