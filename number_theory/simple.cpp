@@ -71,6 +71,19 @@ vector<int> range_mod_inverse(int n, const int mod){
 	return ret;
 }
 
+vector<int> getFactorials(int n, const int mod) {
+	vector<int> ret(1,1);
+	for (int i = 1; i <= n; i++) ret.push_back((long long)ret.back()*i%mod);
+	return ret;
+}
+
+vector<int> getInverseFactorials(int n, const int mod) {
+	vector<int> invmod(range_mod_inverse(n, mod));
+	vector<int> ret(1,1);
+	for (int i = 1; i <= n; i++) ret.push_back((long long)ret.back()*invmod[i]%mod);
+	return ret;
+}
+
 
 /* (a+b)%m */
 uint64_t large_mod_add(uint64_t a, uint64_t b, uint64_t m) {
