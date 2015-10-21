@@ -7,17 +7,19 @@
 using namespace std;
 
 /* max_heap */
-template<typename Ty>
+template<typename Ty, typename Pr = less<Ty>>
 struct removable_heap
 {
 	typedef int id_t;
 	typedef ptrdiff_t pos_t;
+
+	Pr comparator;
 	vector<pair<Ty, id_t>> heap;
 	id_t lastid;
 	unordered_map<id_t, pos_t> pos;
 	removable_heap():lastid(0){}
 	/* returns id */
-	id_t push(typename Ty val)
+	id_t push(Ty val)
 	{
 		id_t id = lastid++;
 		pos_t cur = heap.size();
@@ -26,7 +28,7 @@ struct removable_heap
 		{
 			pos_t par = (cur-1)>>1;
 			/* satisfies heap */
-			if (heap[par] >= heap[cur])
+			if (!comparator(heap[par].first, heap[cur].first))
 				break;
 			swap(heap[par], heap[cur]);
 			pos[heap[cur].second] = cur;
@@ -45,20 +47,20 @@ struct removable_heap
 			pos_t left = hole*2 + 1;
 			pos_t right = hole*2 + 2;
 			pos_t swpind = hole;
-			if (hole > 0 && heap[par] < heap[hole]){
+			if (hole > 0 && comparator(heap[par].first, heap[hole].first)){
 				swpind = par;
 			} else if (right < heap.size()) {
-				if (heap[left] < heap[right]) {
-					if (heap[hole] < heap[right]) {
+				if (comparator(heap[left].first, heap[right].first)) {
+					if (comparator(heap[hole].first, heap[right].first)) {
 						swpind = right;
 					}
 				} else {
-					if (heap[hole] < heap[left]) {
+					if (comparator(heap[hole].first, heap[left].first)) {
 						swpind = left;
 					}
 				}
 			} else if (left < heap.size()) {
-				if (heap[hole] < heap[left]) {
+				if (comparator(heap[hole].first, heap[left].first)) {
 					swpind = left;
 				}
 			}
@@ -96,4 +98,3 @@ struct removable_heap
 		adjust(cur);
 	}
 };
-
