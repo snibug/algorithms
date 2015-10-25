@@ -19,13 +19,12 @@ struct removable_heap
 	unordered_map<id_t, pos_t> pos;
 	removable_heap():lastid(0){}
 	/* returns id */
-	id_t push(Ty val)
+	id_t push(const Ty &val)
 	{
 		id_t id = lastid++;
 		pos_t cur = heap.size();
-		heap.emplace_back(val, id);
-		while(cur > 0)
-		{
+		heap.emplace_back(move(val), id);
+		while(cur > 0) {
 			pos_t par = (cur-1)>>1;
 			/* satisfies heap */
 			if (!comparator(heap[par].first, heap[cur].first))
@@ -97,4 +96,32 @@ struct removable_heap
 		heap.pop_back();
 		adjust(cur);
 	}
+	Ty find(id_t id)
+	{
+		if (pos.count(id) == 0) return Ty();
+		return heap[pos[id]];
+	}
+	void modify(id_t id, const Ty &newValue)
+	{
+		if (pos.count(id) == 0) throw runtime_error("invalid id");
+		auto cur = pos[id];
+		heap[cur].first = move(newValue);
+		adjust(cur);
+	}
 };
+
+/* very basic test */
+#include <cstdio>
+
+int main()
+{
+	removable_heap<int> h;
+	auto id1 = h.push(1);
+	auto id2 = h.push(2);
+	h.remove(id2);
+	h.modify(id1, 3);
+	auto val = h.top();
+	h.pop();
+	printf("%d\n", val);
+	return 0;
+}
