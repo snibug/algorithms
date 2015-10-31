@@ -6,6 +6,24 @@
 
 using namespace std;
 
+/* Calculate ceil(a/b)
+ * Assumption: |a|,|b| \le (2^63)-1 (does not cover -2^63)
+ * Dependencies: none */
+long long ceildiv(long long a, long long b){
+	if (b < 0) return ceildiv(-a, -b);
+	if (a < 0) return (-a) / b;
+	return ((unsigned long long)a+(unsigned long long)b-1ull)/b;
+}
+
+/* Calculate floor(a/b)
+ * Assumption: |a|,|b| \le (2^63)-1 (does not cover -2^63)
+ * Dependencies: none */
+long long floordiv(long long a, long long b){
+	if (b < 0) return floordiv(-a, -b);
+	if (a >= 0) return a / b;
+	return -(long long)(((unsigned long long)(-a)+b-1)/b);
+}
+
 /* Calculate n^k mod m
  * Dependencies: none */
 uint64_t power(uint64_t n, uint64_t k, uint64_t m) {
