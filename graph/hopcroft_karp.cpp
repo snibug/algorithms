@@ -1,120 +1,73 @@
+#include <vector>
+#include <queue>
+
 // in: n, m, graph
 // out: match, matched
-struct HK
+// vertex cover: (reached[0][left_node] == 0) || (reached[1][right_node] == 1)
+struct hopcroft
 {
-	HK(int n, int m) : n(n), m(m), graph(n), match(n), matched(m), depth(n), q(n), v(n) { }
-	
-	int n, m;
-	vector<vector<int>> graph;
-	vector<int> match, matched, depth, q, v;
-	int vcnt;
-	bool BFS(){
-		int t = 0;
-		for(int i = 0; i < n; i++)
-			if (match[i] == -1) depth[i] = 0, q[t++] = i;
-			else depth[i] = -1;
-		for(int h = 0; h < t; h++) {
-			int cur = q[h];
-			int curDepth = depth[cur];
-			for(int i = 0; i < graph[cur].size(); i++) {
-				int adj = graph[cur][i];
-				if (matched[adj] == -1)
-					return true;
-				int next = matched[adj];
-				if (depth[next] != -1) continue;
-				depth[next] = curDepth + 1, q[t++] = next;
+	int n;
+	vector<vector<int> > graph;
+	vector<int> matched, match;
+	vector<int> edgeview;
+	vector<int> level;
+	vector<int> reached[2];
+	hopcroft(int n) : n(n), graph(n), matched(n, -1), match(n, -1) {}
+
+	bool assignLevel()
+	{
+		bool reachable = false;
+		level.assign(n, -1);
+		for (int i = 0; i < 2; i++)
+			reached[i].assign(n, 0);
+		queue<int> q;
+		for (int i = 0; i < n; i++) {
+			if (match[i] == -1) {
+				level[i] = 0;
+				reached[0][i] = 1;
+				q.push(i);
 			}
 		}
-		return false;
+		while (!q.empty()) {
+			auto cur = q.front(); q.pop();
+			for (auto adj : graph[cur]) {
+				reached[1][adj] = 1;
+				auto next = matched[adj];
+				if (next == -1) {
+					reachable = true;
+				} else if (level[next] == -1) {
+					level[next] = level[cur] + 1;
+					reached[0][next] = 1;
+					q.push(next);
+				}
+			}
+		}
+		return reachable;
 	}
 
-	bool DFS(int nod) {
-		v[nod] = vcnt;
-		for(int i = 0; i < graph[nod].size(); i++) {
+	int findpath(int nod) {
+		for (int &i = edgeview[nod]; i < graph[nod].size(); i++) {
 			int adj = graph[nod][i];
 			int next = matched[adj];
-			if (next >= 0 && (v[next] == vcnt || depth[next] != depth[nod] + 1))
-				continue;
-			if (next == -1 || DFS(next)) {
+			if (next >= 0 && level[next] != level[nod] + 1) continue;
+			if (next == -1 || findpath(next)) {
 				match[nod] = adj;
 				matched[adj] = nod;
-				return true;
+				return 1;
 			}
 		}
-		return false;
+		return 0;
 	}
 
-	int Match()
+	int solve()
 	{
-		fill(match.begin(),match.end(), -1);
-		fill(matched.begin(),matched.end(), -1);
 		int ans = 0;
-		while(BFS()) {
-			++vcnt;
-			for(int i = 0; i < n; i++) if (depth[i] == 0 && DFS(i)) ans++;
+		while(assignLevel()){
+			edgeview.assign(n, 0);
+			for (int i = 0; i < n; i++)
+				if (match[i] == -1)
+					ans += findpath(i);
 		}
 		return ans;
 	}
 };
-
-// in: n, m, graph
-// out: match
-namespace HopcroftKarp
-{
-	const int MAX_N = 503, MAX_M = 503;
-	int n, m;
-	vector<int> graph[MAX_N];
-	int match[MAX_N];
-
-	int matched[MAX_M], depth[MAX_N], q[MAX_N];
-	int v[MAX_N], vcnt;
-	bool BFS(){
-		int t = 0;
-		for(int i = 0; i < n; i++)
-			if (match[i] == -1) depth[i] = 0, q[t++] = i;
-			else depth[i] = -1;
-		for(int h = 0; h < t; h++) {
-			int cur = q[h];
-			int curDepth = depth[cur];
-			for(int i = 0; i < graph[cur].size(); i++) {
-				int adj = graph[cur][i];
-				if (matched[adj] == -1)
-					return true;
-				int next = matched[adj];
-				if (depth[next] != -1) continue;
-				depth[next] = curDepth + 1, q[t++] = next;
-			}
-		}
-		return false;
-	}
-
-	bool DFS(int nod) {
-		v[nod] = vcnt;
-		for(int i = 0; i < graph[nod].size(); i++) {
-			int adj = graph[nod][i];
-			int next = matched[adj];
-			if (next >= 0 && (v[next] == vcnt || depth[next] != depth[nod] + 1))
-				continue;
-			if (next == -1 || DFS(next)) {
-				match[nod] = adj;
-				matched[adj] = nod;
-				return true;
-			}
-		}
-		return false;
-	}
-
-	int Match()
-	{
-		memset(match, -1, sizeof(match));
-		memset(matched, -1, sizeof(matched));
-		int ans = 0;
-		while(BFS()) {
-			++vcnt;
-			for(int i = 0; i < n; i++) if (depth[i] == 0 && DFS(i)) ans++;
-		}
-		return ans;
-	}
-}
-
-
