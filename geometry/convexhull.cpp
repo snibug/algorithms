@@ -12,6 +12,8 @@ long long ccw(point a, point b, point c) {
 }
 
 vector<point> convexHull(vector<point> dat) {
+	if (dat.size() <= 3)
+		return dat;
 	vector<point> upper, lower;
 	sort(dat.begin(), dat.end());
 	for(int i = 0; i < dat.size(); i++) {
