@@ -40,6 +40,8 @@ struct SuffixArray
 	vector<int> lcparray() {
 		if (in.size() != out.size()) build();
 		int n = (int)in.size();
+		if (n == 0)
+			return vector<int>();
 		vector<int> rank(n); // temporary
 		vector<int> height(n-1); // output lcp array
 
@@ -59,6 +61,7 @@ struct SuffixArray
 
 #include <cstdlib>
 #include <ctime>
+#include <string>
 
 int main(){
 	string s;
