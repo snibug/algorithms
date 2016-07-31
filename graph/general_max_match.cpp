@@ -53,6 +53,8 @@ struct DisjointSet
 
 	void merge(int a, int b) {
 		a = find(a), b = find(b);
+		if (a == b)
+			return;
 		if (cnt[a] > cnt[b]) {
 			cnt[a] += cnt[b];
 			parent[b] = a;
