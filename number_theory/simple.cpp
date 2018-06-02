@@ -11,7 +11,7 @@ using namespace std;
  * Dependencies: none */
 long long ceildiv(long long a, long long b){
 	if (b < 0) return ceildiv(-a, -b);
-	if (a < 0) return (-a) / b;
+	if (a < 0) return a / b;
 	return ((unsigned long long)a+(unsigned long long)b-1ull)/b;
 }
 
@@ -177,4 +177,15 @@ pair<long long, long long> SolveAXB(long long a, long long b, long long m) {
 	long long g = gcd(a, m);
 	if (b % g) return make_pair(-1, -1);
 	return make_pair(((b/g) * modinverse(a/g, m/g))%m, m/g);
+}
+
+
+
+#define myasrt(expr) do { if (expr); else { puts("asrt failed: " #expr); return 1;}  } while(0)
+int main() {
+	myasrt(ceildiv(5,3) == 2);
+	myasrt(ceildiv(-5,-3) == 2);
+	myasrt(ceildiv(-5,3) == -1);
+	myasrt(ceildiv(0,3) == 0);
+	return 0;
 }
