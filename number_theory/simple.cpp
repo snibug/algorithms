@@ -176,8 +176,10 @@ pair<long long, long long> SolveAXB(long long a, long long b, long long m) {
 	}
 	long long g = gcd(a, m);
 	if (b % g) return make_pair(-1, -1);
-	return make_pair(((b/g) * modinverse(a/g, m/g))%m, m/g);
+	long long ap = a / g, bp = b / g, mp = m / g;
+	return make_pair((bp * modinverse(ap, mp)) % mp, mp);
 }
+
 
 
 
