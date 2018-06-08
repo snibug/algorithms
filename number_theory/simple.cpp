@@ -132,6 +132,24 @@ uint64_t large_mod_mul(unsigned __int128 a, unsigned __int128 b, unsigned __int1
 	return a*b%m;
 }
 
+/*
+ * Eratosthenes sieve, only odd numbers.
+ * If x is odd, sieve[x>>1] gives the result.
+ */
+vector<bool> odd_sieve(unsigned int n) {
+  // assumption: n < 4294836225
+  vector<bool> val((n + 1) / 2, true);
+  val[0] = false;
+  for (unsigned int i = 3; i * i <= n; i += 2) {
+    if (!val[i>>1]) continue;
+    for (unsigned int j = i * i; j <= n; j += 2 * i) {
+      val[j >> 1] = false;
+    }
+  }
+  return val;
+}
+
+
 namespace Primality {
 	bool testWitness(uint64_t a, uint64_t n, uint64_t s) {
 		if (a >= n) a %= n;
@@ -191,3 +209,4 @@ int main() {
 	myasrt(ceildiv(0,3) == 0);
 	return 0;
 }
+
