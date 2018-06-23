@@ -14,7 +14,7 @@ using namespace std;
  * tree.add(3);
  * tree.add(5);
  *
- * tree.order(0); // get 0-th element
+ * tree.select(0); // get 0-th element
  *
  * 디버깅 편의를 위해 일부러 C++답지 않게 구현함
  *
@@ -24,9 +24,11 @@ template<typename T>
 struct ScapegoatTree {
   typedef int index_t;
 
-  static const index_t nil = -1;
-  static const int nume = 70;
-  static const int deno = 100;
+  enum {
+    nil = -1,
+    nume = 70,
+    deno = 100
+  };
 
   // 1/2 < nume / deno < 1
   static_assert(deno < 2 * nume, "0.5 < alpha");
@@ -150,7 +152,7 @@ struct ScapegoatTree {
   }
 
   // get order-th element
-  T& order(size_t order) {
+  T& select(size_t order) {
     index_t node_index = root;
     while (node_index != nil) {
       Node &cur = nodes[node_index];
@@ -176,21 +178,21 @@ struct ScapegoatTree {
     return nodes[order.second].value;
   }
 
-  // return (order, node_index)
+  // return (rank, node_index)
   pair<size_t, index_t> lower_bound(const T &key) const {
     pair<size_t, index_t> best_guess(nodes.size(), nil);
 
     index_t node_index = root;
-    size_t order = 0;
+    size_t rank = 0;
     while (node_index != nil) {
       const Node &cur = nodes[node_index];
       size_t leftsize = 0;
       if (cur.left != nil) { leftsize = nodes[cur.left].size; }
       if (cur.value < key) {
         node_index = cur.right;
-        order += leftsize + 1;
+        rank += leftsize + 1;
       } else {
-        best_guess = make_pair(order + leftsize, node_index);
+        best_guess = make_pair(rank + leftsize, node_index);
         node_index = cur.left;
       }
     }
@@ -215,6 +217,7 @@ struct ScapegoatTree {
   size_t size() const { return nodes.size(); }
 };
 
+
 #include <climits>
 
 int main() {
@@ -223,7 +226,7 @@ int main() {
   for (int value : values) {
     tree.add(value);
     for (int i = 0; i < (int)tree.size(); i++) {
-      printf("%d ", tree.order(i));
+      printf("%d ", tree.select(i));
     }
     printf("\n");
   }
@@ -236,12 +239,12 @@ int main() {
   printf("added %d, elapsed %d tick\n", (int)tree.size(), c2 - c1);
 
   for (int i = 0; i < (int)tree.size(); i++) {
-    auto order = tree.lower_bound(tree.order(i));
-    if ((int)order.first != i || tree.nodes[order.second].value != tree.order(i)) {
+    auto selected = tree.lower_bound(tree.select(i));
+    if ((int)selected.first != i || tree.nodes[selected.second].value != tree.select(i)) {
       printf("Something went wrong %d\n", i);
       return 1;
     }
-    if (tree.count(tree.order(i)) != 1) {
+    if (tree.count(tree.select(i)) != 1) {
       printf("Something went wrong %d\n", i);
       return 1;
     }
