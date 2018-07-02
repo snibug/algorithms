@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <vector>
 #include <algorithm>
+#include <tuple>
 
 using namespace std;
 
@@ -38,18 +39,19 @@ long long gcd(long long a, long long b) {
 long long binary_gcd(long long a, long long b) {
 	if (a < 0) a = -a;
 	if (b < 0) b = -b;
-	int twos = 0;
-	while (a && b) {
-		int az = __builtin_ctzll(a); // g++
-		int bz = __builtin_ctzll(b); // g++
-		twos += min(az, bz);
-		a >>= az; b >>= bz;
-
-		long long t = min(a, b);
-		a = abs(a-b) >> 1;
-		b = t;
-	}
-	return (a + b) << twos;
+	if (a == 0) return b;
+	if (b == 0) return a;
+	int twos = __builtin_ctzll(a | b);
+	b >>= __builtin_ctzll(b);
+	do {
+		a >>= __builtin_ctzll(a);
+		if (a < b) {
+			tie(a, b) = make_pair(b - a, a);
+		} else {
+			tie(a, b) = make_pair(a - b, b);
+		}
+	} while (a);
+	return b << twos;
 }
 
 /* Calculate ceil(a/b)
@@ -289,10 +291,11 @@ int compare_gcd() {
 			myasrt(gcd(a, b) == binary_gcd(a, b));
 		}
 	}
+	return 0;
 }
 
 int main() {
-	//benchmark_gcd();
+	benchmark_gcd();
 	if (compare_gcd()) return 1;
 	myasrt(ceildiv(5,3) == 2);
 	myasrt(ceildiv(-5,-3) == 2);
