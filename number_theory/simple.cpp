@@ -10,18 +10,36 @@ using namespace std;
 
 // For most functions, -2^63 is not safe.
 
-/* find a pair (c,d) s.t. ac + bd = gcd(a,b)
+/* find (gcd, c, d) s.t. ac + bd = gcd
+ * Returns (gcd, c, d). gcd can be negative if a or b is negative
+ * |c| < |b/gcd|, |d| < |a/gcd| if a and b are non-multiple
  * Dependencies: none */
-pair<long long, long long> extended_gcd(long long a, long long b) {
+tuple<long long, long long, long long> extended_gcd(long long a, long long b) {
+	long long s = 1, t = 0;
+	long long u = 0, v = 1;
+	// loop invariant: (A,B) = (input a, input b), a = s*A + t*B, b = u*A + v*B
+	while (b != 0) {
+		long long q = a / b;
+		tie(a, b) = make_pair(b, a % b);
+		// b' = A(s-uq) + B(t-vq)
+		tie(s, t, u, v) = make_tuple(u, v, s - u * q, t - v * q);
+	}
+	return make_tuple(a, s, t);
+}
+
+pair<long long, long long> extended_gcd_rec(long long a, long long b) {
 	if (b == 0) return make_pair(1, 0);
-	pair<long long, long long> t = extended_gcd(b, a % b);
+	pair<long long, long long> t = extended_gcd_rec(b, a % b);
 	return make_pair(t.second, t.first - t.second * (a / b));
 }
 
+
 /* Find x in [0,m) s.t. ax ≡ gcd(a, m) (mod m)
+ * Assumption: m > 0
  * Dependencies: extended_gcd(a, b) */
 long long modinverse(long long a, long long m) {
-	return (extended_gcd(a, m).first % m + m) % m;
+	long long value = get<1>(extended_gcd(a, m)) % m;
+	return (value < 0) ? value + m : value;
 }
 
 /* Calculate gcd(a,b)
@@ -285,6 +303,54 @@ void benchmark_gcd() {
 	printf("%d, %llu\n", tc - tb - (ta - t0), ans);
 }
 
+void benchmark_extended_gcd() { 
+	unsigned long long ans = 0;
+	int loopcnt = 5000000;
+	int t0 = clock();
+	for (int i = 0; i < loopcnt; i++) {
+		unsigned long long a = 0, b = 0;
+		a <<= 20; a += rand();
+		a <<= 20; a += rand();
+		a <<= 20; a += rand();
+		b <<= 20; b += rand();
+		b <<= 20; b += rand();
+		b <<= 20; b += rand();
+		a >>= 2;
+		b >>= 2;
+		ans += a^b;
+	}
+	int ta = clock();
+	printf("%d\n", ta - t0);
+	for (int i = 0; i < loopcnt; i++) {
+		unsigned long long a = 0, b = 0;
+		a <<= 20; a += rand();
+		a <<= 20; a += rand();
+		a <<= 20; a += rand();
+		b <<= 20; b += rand();
+		b <<= 20; b += rand();
+		b <<= 20; b += rand();
+		a >>= 2;
+		b >>= 2;
+		ans += get<1>(extended_gcd(a, b));
+	}
+	int tb = clock(); 
+	printf("%d, %llu\n", tb - ta - (ta - t0), ans);
+	for (int i = 0; i < loopcnt; i++) {
+		unsigned long long a = 0, b = 0;
+		a <<= 20; a += rand();
+		a <<= 20; a += rand();
+		a <<= 20; a += rand();
+		b <<= 20; b += rand();
+		b <<= 20; b += rand();
+		b <<= 20; b += rand();
+		a >>= 2;
+		b >>= 2;
+		ans += extended_gcd_rec(a, b).first;
+	}
+	int tc = clock();
+	printf("%d, %llu\n", tc - tb - (ta - t0), ans);
+}
+
 int compare_gcd() {
 	for (int a = -200; a <= 200; a++) {
 		for (int b = -200; b <= 200; b++) {
@@ -294,9 +360,27 @@ int compare_gcd() {
 	return 0;
 }
 
+int compare_extended_gcd() {
+	for (int a = -200; a <= 200; a++) {
+		for (int b = -200; b <= 200; b++) {
+			auto v = extended_gcd(a, b);
+			long long c, d, g;
+			tie(g, c, d) = v;
+			myasrt(g == a*c + b*d);
+			myasrt(a == 0 || b == 0 || abs(c) <= abs(b / g));
+			myasrt(a == 0 || b == 0 || abs(d) <= abs(a / g));
+			myasrt(make_pair(get<1>(v), get<2>(v)) == extended_gcd_rec(a, b));
+		}
+	}
+	return 0;
+}
+
+
 int main() {
-	benchmark_gcd();
+	//benchmark_gcd();
+	//benchmark_extended_gcd();
 	if (compare_gcd()) return 1;
+	if (compare_extended_gcd()) return 1;
 	myasrt(ceildiv(5,3) == 2);
 	myasrt(ceildiv(-5,-3) == 2);
 	myasrt(ceildiv(-5,3) == -1);
@@ -316,6 +400,7 @@ int main() {
 	myasrt(!Prime::is_prime(15251));
 	myasrt(Prime::is_prime(12345678901253ull));
 	myasrt(!Prime::is_prime(12345678901257ull));
+	printf("Finished all tests successfully\n");
 	return 0;
 }
 
