@@ -28,3 +28,69 @@ vector<int> solveLIS(const vector<T> &dat, bool strict = true) {
   return sequence;
 }
 
+template<typename T>
+int strict_LIS_size(const vector<T> &dat) {
+  int n = dat.size();
+  vector<T> st;
+  st.reserve(n);
+  for (int i = 0; i < n; i++) {
+    if (st.empty() || st.back() < dat[i]) {
+      st.emplace_back(dat[i]);
+    }
+    else {
+      auto I = lower_bound(st.begin(), st.end(), dat[i]);
+      *I = dat[i];
+    }
+  }
+  return st.size();
+}
+
+template<typename T>
+int monotonic_LIS_size(const vector<T> &dat) {
+  int n = dat.size();
+  vector<T> st;
+  st.reserve(n);
+  for (int i = 0; i < n; i++) {
+    if (st.empty() || st.back() <= dat[i]) {
+      st.emplace_back(dat[i]);
+    }
+    else {
+      auto I = upper_bound(st.begin(), st.end(), dat[i]);
+      *I = dat[i];
+    }
+  }
+  return st.size();
+}
+
+
+#include <iostream>
+
+int main() {
+	ios_base::sync_with_stdio(false); cin.tie(NULL);
+	int n;
+	cin >> n;
+	vector<int> dat(n);
+	for (int i = 0; i < n; i++) {
+		cin >> dat[i];
+	}
+
+	printf("strict size: %d\n", strict_LIS_size(dat));
+	{
+		auto result = solveLIS(dat, true);
+		printf("index: ");
+		for (auto v : result) {
+			printf("%d ", v);
+		}
+		printf("\n");
+	}
+	printf("monotonic size: %d\n", monotonic_LIS_size(dat));
+	{
+		auto result = solveLIS(dat, false);
+		printf("index: ");
+		for (auto v : result) {
+			printf("%d ", v);
+		}
+		printf("\n");
+	}
+	return 0;
+}
