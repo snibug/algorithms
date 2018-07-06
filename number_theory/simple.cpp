@@ -10,6 +10,12 @@ using namespace std;
 
 // For most functions, -2^63 is not safe.
 
+// Assumption: m > 0
+long long positive_mod(long long a, long long m) {
+	long long res = a % m;
+	return (res < 0) ? res + m : res;
+}
+
 /* find (gcd, c, d) s.t. ac + bd = gcd
  * Returns (gcd, c, d). gcd can be negative if a or b is negative
  * |c| < |b/gcd|, |d| < |a/gcd| if a and b are non-multiple
@@ -70,6 +76,72 @@ long long binary_gcd(long long a, long long b) {
 		}
 	} while (a);
 	return b << twos;
+}
+
+
+/* Solve a*x === b (mod m)
+ *
+ * Assumption: 0 <= a, b < m <= 3037000500 (3.03*10^9)
+ *
+ * (x, M) if x (mod M) satisfies
+ * (-1,-1) for no solution */
+pair<long long, long long> SolveAXB(long long a, long long b, long long m) {
+	if (a == 0) {
+		if (b == 0) return make_pair(0, 1);
+		return make_pair(-1, -1);
+	}
+	long long g = gcd(a, m);
+	if (b % g) return make_pair(-1, -1);
+	long long ap = a / g, bp = b / g, mp = m / g;
+	return make_pair((bp * modinverse(ap, mp)) % mp, mp);
+}
+
+/* Chinese Remainder Theorem solver
+ *
+ * Assumption: LCM(n) < 2^63
+ * 
+ * return (M, N) such that (M + N*x) == a[i] (mod n[i]).
+ * return (-1, -1) if impossible
+ *
+ * Call crt_solve(a, n)
+ */
+long long get_crt_divisor(const long long a, const long long g) {
+	const long long keeping_prime_powers = binary_gcd(a / g, g);
+	long long divisor = g;
+	for (;;) {
+		const long long discard = binary_gcd(keeping_prime_powers, divisor);
+		if (discard <= 1) break;
+		divisor /= discard;
+	}
+	return divisor;
+}
+pair<long long, long long> crt_solve(const vector<int> &a, const vector<int> &n) {
+	if (a.empty()) return make_pair(0, 1);
+	long long n1 = abs(n[0]);
+	long long a1 = positive_mod(a[0], n1);
+	for (int i = 1; i < a.size(); i++) {
+		long long n2 = abs(n[i]);
+		long long a2 = positive_mod(a[i], n2);
+		long long g = binary_gcd(n1, n2);
+		if (g > 1) {
+			if (a1 % g != a2 % g) return make_pair(-1, -1);
+			long long d1 = get_crt_divisor(n1, g);
+			long long d2 = g / d1;
+			n1 /= d1;
+			n2 /= d2;
+			a1 %= n1;
+			a2 %= n2;
+			// now gcd(n1, n2) == 1
+		}
+		long long m1;
+		tie(std::ignore, m1, std::ignore) = extended_gcd(n1, n2);
+		// x === a1 + n1*alpha (mod n1*n2),
+		// n1*alpha === a2-a1 (mod n2)
+		long long alpha = positive_mod(a2 - a1, n2) * positive_mod(m1, n2) % n2;
+		a1 = a1 + alpha * n1;
+		n1 = n1 * n2;
+	}
+	return make_pair(a1, n1);
 }
 
 /* Calculate ceil(a/b)
@@ -234,22 +306,6 @@ namespace Prime {
 }
 
 
-/* Solve a*x === b (mod m)
- *
- * precondition: 0 <= a, b < m
- * (x, M) if x (mod M) satisfies
- * (-1,-1) for no solution */
-pair<long long, long long> SolveAXB(long long a, long long b, long long m) {
-	if (a == 0) {
-		if (b == 0) return make_pair(0, 1);
-		return make_pair(-1, -1);
-	}
-	long long g = gcd(a, m);
-	if (b % g) return make_pair(-1, -1);
-	long long ap = a / g, bp = b / g, mp = m / g;
-	return make_pair((bp * modinverse(ap, mp)) % mp, mp);
-}
-
 
 
 
@@ -400,6 +456,24 @@ int main() {
 	myasrt(!Prime::is_prime(15251));
 	myasrt(Prime::is_prime(12345678901253ull));
 	myasrt(!Prime::is_prime(12345678901257ull));
+
+	myasrt(7 == modinverse(4, 9));
+	myasrt(27625430687295043ll == modinverse(48382834818537ll, 39769844199555331ll));
+
+	myasrt(make_pair(0LL, 1LL) == crt_solve(vector<int>(), vector<int>()));
+	myasrt(make_pair(2244122LL, 5292000LL) == crt_solve(
+				vector<int>{228122,     921122},
+				vector<int>{32*9*125*7, 8*27*125*49}));
+	myasrt(make_pair(-1LL, -1LL) == crt_solve(
+				vector<int>{228122,     921122,      80},
+				vector<int>{32*9*125*7, 8*27*125*49, 128*5}));
+	myasrt(make_pair(457356122LL, 756756000LL) == crt_solve(
+				vector<int>{228122,     921122,      80},
+				vector<int>{32*9*125*7, 8*27*125*49, -2*11*13}));
+	myasrt(make_pair(457356122LL, 756756000LL) == crt_solve(
+				vector<int>{228122,     921122,      80,       100},
+				vector<int>{32*9*125*7, 8*27*125*49, -2*11*13, 1}));
+
 	printf("Finished all tests successfully\n");
 	return 0;
 }
