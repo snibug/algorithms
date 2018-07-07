@@ -23,3 +23,11 @@ Moore's nim: Remove something from at most k rows. Convert to 2-base digits, tre
 
 misere nim: play exactly as if you were playing normal play nim, except if your winning move would lead to a position that consists of heaps of size one only. In that case, leave exactly one more or one fewer heaps of size one than the normal play strategy recommends.
 
+
+
+
+Graph theory
+============
+
+Arboricity - partition edges into forests. minimum number of forests. Special case of matroid partitioning
+Matroid Partitioning - max flow of edges as nodes

@@ -13,8 +13,7 @@
 
 using namespace std;
 
-struct DisjointSet
-{
+struct DisjointSet {
 	vector<int> parent, cnt;
 
 	DisjointSet() { }
@@ -65,8 +64,7 @@ struct DisjointSet
 	}
 };
 
-struct MaxMatching
-{
+struct MaxMatching {
 	int n;
 	vector<vector<int>> gnext;
 	vector<int> matched;
@@ -79,11 +77,13 @@ struct MaxMatching
 		matched(n, -1)
 	{
 	}
+
 	void AddEdge(int a, int b) {
 		gnext[a].push_back(b);
 		gnext[b].push_back(a);
 	}
 
+	// to find actual match, use matched array. if (u,v) is a match, matched[u] = v and matched[v] = u
 	int Match() {
 		int ans = 0;
 		while(findAugment()) {
@@ -92,13 +92,31 @@ struct MaxMatching
 		return ans;
 	}
 
-	vector<int> parent; // shrunken -> real
-	vector<int> forest;
-	vector<int> level;
-	vector<pair<int,int>> bridge;
+	// even: 자유정점으로부터 거리가 짝수 (원래 매칭의 끝)
+	// odd: 자유정점으로부터 거리가 홀수 (원래 매칭의 시작)
+	// base: 블라섬 내부에서 바깥과 매칭된 내부 정점
+	// stem: 자유정점으로부터 base 까지의 경로
+	// predecessor: augment path에서 매칭된 점 말고 반대쪽으로 있는 점
+	// mate: 매칭된 점
+	// origin: blossom이면 base가 되는 정점을 계속 추적했을 때 나오는 정점
+	//
+	// augmenting 한 번마다 새로 forest를 키운다.
+	// 초기에 각 트리의 루트는 자유 정점이다.
+	// forest의 even에서 연결된 간선을 확인하면서 붙여나간다. augment path를 키워나가는 것이다.
+	//
+	// even인 v에서 확인했을 때, 새 정점 w의 경우수
+	// 1) forest에 있었던 odd 정점 -> ignore
+	// 2) 처음 보는데, 매칭되어 있다 -> 매칭된 정점도 함께 추가
+	// 3) forest에 있었던 even 정점, 다른 트리 -> 경로를 찾음
+	// 4) forest에 있었던 even 정점, 같은 트리 -> blossom.
+	//
+	vector<int> parent; // 정점 -> 트리의 parent 관계, 즉 predecessor 및 mate
+	vector<int> forest; // 정점 -> forest에 산입된 경우, 트리 번호. unreached이면 -1
+	vector<int> level;  // 정점 -> 트리 상 깊이 (0부터 시작)
+	vector<pair<int,int>> bridge; // odd 정점 -> 트리 내에서 blossom이 만들어진다면 그 원인 간선. 방향은 반대쪽
 	queue<int> q;
 	DisjointSet blossomSet;
-	vector<int> origin; // blossomSet number to -> origin vertex
+	vector<int> origin; // 정점 -> 재귀적으로 blossom이라면 base의 원본 vertex
 	vector<int> ancestorChecker;
 	int ancestorCheckerValue;
 
