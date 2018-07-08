@@ -65,93 +65,55 @@ struct WaveletTree {
   int root;
 
   WaveletTree(vector<T> data) {
-    nodes.reserve(data.size() * 3);
-    root = build(move(data));
+    vector<T> sorted(data);
+    sort(sorted.begin(), sorted.end());
+    nodes.reserve(data.size() * 2 + 10);
+    root = build(move(data), sorted.begin());
   }
 
 
-  int build(vector<T> data) {
+  int build(vector<T> data, typename vector<T>::iterator sorted_iter) {
     if (data.empty()) return -1;
     int n = (int)data.size();
     int id = (int)nodes.size(); nodes.emplace_back();
-    auto minmax = minmax_element(data.begin(), data.end());
-    T min = *minmax.first, max = *minmax.second;
+    T min = sorted_iter[0], max = sorted_iter[n - 1];
     nodes[id].min = min;
     nodes[id].max = max;
     nodes[id].n = n;
     nodes[id].left = -1;
     nodes[id].right = -1;
-    if (min == max) {
-      return id;
-    }
+    if (min == max) return id;
 
-    T mid = (min < 0 && max > 0) ? ((min + max) / 2) : (min + (max - min) / 2);
-    if (mid == max) mid--; // avoid zero split
-    // [min, mid], (mid, max]
+    T mid = sorted_iter[n / 2];
+    if (min == mid) mid++; // avoid zero split
+    // [min, mid), [mid, max]
 
     nodes[id].left_count.reserve(n + 1);
     int cnt = 0;
     nodes[id].left_count.push_back(cnt);
     for (int i = 0; i < n; i++) {
-      if (data[i] <= mid) cnt++;
+      if (data[i] < mid) cnt++;
       nodes[id].left_count.push_back(cnt);
     }
 
-    if (n > 14 && std::max(cnt, n - cnt) * 5 > n * 4) {
-      // detected unbalanced split, pick med of random elements
-      int a, b, c;
-      unsigned int r;
-      r = rand(); r *= RAND_MAX; r += rand();
-      a = r % n;
-      r = rand(); r *= RAND_MAX; r += rand();
-      b = r % n;
-      r = rand(); r *= RAND_MAX; r += rand();
-      c = r % n;
-      mid = median3(data[a], data[b], data[c]);
-      if (mid == max) mid--;
-
-      nodes[id].left_count.clear();
-      cnt = 0;
-      nodes[id].left_count.push_back(cnt);
-      for (int i = 0; i < n; i++) {
-        if (data[i] <= mid) cnt++;
-        nodes[id].left_count.push_back(cnt);
-      }
-    }
-
-    vector<T> left, right;
-    left.reserve(cnt), right.reserve(n - cnt);
-    for (int i = 0; i < n; i++) {
-      if (data[i] <= mid) {
+    vector<T> left;
+    left.reserve(cnt);
+    for (int i = 0, j = 0; i < n; i++) {
+      if (data[i] < mid) {
         left.push_back(data[i]);
       }
       else {
-        right.push_back(data[i]);
+        data[j] = data[i];
+        j++;
       }
     }
+    data.resize(n - cnt);
 
-    vector<T>().swap(data); // clear data
-
-    int left_child, right_child;
-    if (left.size() >= right.size()) {
-      left_child = build(move(left));
-      right_child = build(move(right));
-    }
-    else {
-      right_child = build(move(right));
-      left_child = build(move(left));
-    }
-    nodes[id].left = left_child;
-    nodes[id].right = right_child;
+    int left_child = build(move(left), sorted_iter);
+    int right_child = build(move(data), sorted_iter + cnt);
+    nodes[id].left = left_child; // do not inline, UB
+    nodes[id].right = right_child; // do not inline, UB
     return id;
-  }
-  T median3(T a, T b, T c) {
-    if (a < b) {
-      if (b < c) return b;
-      return (a < c) ? c : a;
-    }
-    if (a < c) return a;
-    return (b < c) ? c : b;
   }
 
   // count values in subarray[s, e) that are <= key
@@ -217,6 +179,7 @@ struct WaveletTree {
   }
 
   // find element whose rank is "rank" (0-based) in subarray [s, e)
+  // Assumption: s < e
   T kth(int s, int e, int rank) const {
     int idx = root;
     for (;;) {
@@ -252,7 +215,7 @@ auto make_wavelet(vector<T> data) {
 int main() {
   {
     // heavy allocation
-    vector<int> b;
+    vector<long long> b;
     for (int i = 0; i < 1000000; i++) {
       b.push_back(i);
     }
@@ -272,7 +235,7 @@ int main() {
     auto tree3 = make_wavelet(a.begin(), a.end());
   }
   for (int magic = 0; magic < 10; magic++) {
-    vector<int> arr;
+    vector<long long> arr;
     for (int i = 0; i < 100; i++) {
       arr.push_back(rand() % 100 - 50);
     }
@@ -301,12 +264,12 @@ int main() {
     }
     printf("testing kth\n");
     for (int i = 0; i < n; i++) {
-      vector<int> sub;
+      vector<long long> sub;
       for (int j = i; j < n; j++) {
         sub.push_back(arr[j]);
         sort(sub.begin(), sub.end());
         for (int rank = 0; rank < j - i + 1; rank++) {
-          int value = tree.kth(i, j + 1, rank);
+          long long value = tree.kth(i, j + 1, rank);
           if (value != sub[rank]) {
             printf("Wrong answer\n");
             return 1;
