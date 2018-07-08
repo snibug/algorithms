@@ -86,7 +86,17 @@ struct MaxMatching {
 	// to find actual match, use matched array. if (u,v) is a match, matched[u] = v and matched[v] = u
 	int Match() {
 		int ans = 0;
-		while(findAugment()) {
+		for (int i = 0; i < n; i++) {
+			if (matched[i] != -1) continue;
+			for (auto next : gnext[i]) {
+				if (matched[next] != -1) continue;
+				ans++;
+				matched[i] = next;
+				matched[next] = i;
+				break;
+			}
+		}
+		while (findAugment()) {
 			ans++;
 		}
 		return ans;
@@ -217,14 +227,14 @@ struct MaxMatching {
 	}
 
 	bool findAugment() {
-		parent = vector<int>(n,-1);
-		forest = vector<int>(n,-1);
-		level = vector<int>(n);
-		bridge = vector<pair<int,int>>(n,make_pair(-1,-1));
+		parent.assign(n,-1);
+		forest.assign(n,-1);
+		level.assign(n, 0);
+		bridge.assign(n,make_pair(-1,-1));
 		q = queue<int>();
 		blossomSet.reset(n);
-		origin = vector<int>(n);
-		ancestorChecker = vector<int>(n);
+		origin.assign(n, 0);
+		ancestorChecker.assign(n, 0);
 		ancestorCheckerValue = 0;
 
 		for(int i = 0; i < n; i++) {
