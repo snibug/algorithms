@@ -18,6 +18,8 @@ using namespace std;
  *
  * 디버깅 편의를 위해 일부러 C++답지 않게 구현함
  *
+ *
+ * interface: add, select, get, lower_bound, count, size
  */
 
 template<typename T>
@@ -46,37 +48,6 @@ struct ScapegoatTree {
 
   ScapegoatTree() : root(nil) { }
 
-  index_t rebuild(index_t ind) {
-    vector<index_t> sorted_list;
-    sorted_list.reserve(nodes[ind].size);
-    pack(ind, sorted_list);
-    return rebuild_rec(sorted_list, 0, sorted_list.size());
-  }
-
-  index_t rebuild_rec(vector<index_t> &ord, index_t s, index_t e) {
-    if (s == e)
-      return nil;
-    index_t m = s + (e - s - 1) / 2;
-    Node &cur = nodes[ord[m]];
-    cur.size = 1;
-    cur.left = rebuild_rec(ord, s, m);
-    if (cur.left != nil)
-      cur.size += nodes[cur.left].size;
-    cur.right = rebuild_rec(ord, m + 1, e);
-    if (cur.right != nil)
-      cur.size += nodes[cur.right].size;
-    return ord[m];
-  }
-
-  void pack(index_t ind, vector<index_t> &ord) {
-    const Node &cur = nodes[ind];
-    if (cur.left != nil)
-      pack(cur.left, ord);
-    ord.push_back(ind);
-    if (cur.right != nil)
-      pack(cur.right, ord);
-  }
-  
   // return true if insertion was successful
   // return false if same value was there
   bool add(const T &value) {
@@ -151,7 +122,7 @@ struct ScapegoatTree {
     return true;
   }
 
-  // get order-th element
+  // get order-th element (whose rank is "order")
   T& select(size_t order) {
     index_t node_index = root;
     while (node_index != nil) {
@@ -178,7 +149,9 @@ struct ScapegoatTree {
     return nodes[order.second].value;
   }
 
-  // return (rank, node_index)
+  // Find smallest idx s.t. (key <= nodes[idx].value)
+  // return (rank, idx)
+  // return (size(), nil = -1) if no such idx
   pair<size_t, index_t> lower_bound(const T &key) const {
     pair<size_t, index_t> best_guess(nodes.size(), nil);
 
@@ -199,6 +172,7 @@ struct ScapegoatTree {
     return best_guess;
   }
 
+  // count element by key.
   int count(const T &key) const {
     index_t node_index = root;
     while (node_index != nil) {
@@ -214,7 +188,43 @@ struct ScapegoatTree {
     return 0;
   }
 
+  // size of tree
   size_t size() const { return nodes.size(); }
+
+
+  //internal method
+  index_t rebuild(index_t ind) {
+    vector<index_t> sorted_list;
+    sorted_list.reserve(nodes[ind].size);
+    pack(ind, sorted_list);
+    return rebuild_rec(sorted_list, 0, sorted_list.size());
+  }
+
+  //internal method
+  index_t rebuild_rec(vector<index_t> &ord, index_t s, index_t e) {
+    if (s == e)
+      return nil;
+    index_t m = s + (e - s - 1) / 2;
+    Node &cur = nodes[ord[m]];
+    cur.size = 1;
+    cur.left = rebuild_rec(ord, s, m);
+    if (cur.left != nil)
+      cur.size += nodes[cur.left].size;
+    cur.right = rebuild_rec(ord, m + 1, e);
+    if (cur.right != nil)
+      cur.size += nodes[cur.right].size;
+    return ord[m];
+  }
+
+  //internal method
+  void pack(index_t ind, vector<index_t> &ord) {
+    const Node &cur = nodes[ind];
+    if (cur.left != nil)
+      pack(cur.left, ord);
+    ord.push_back(ind);
+    if (cur.right != nil)
+      pack(cur.right, ord);
+  }
 };
 
 
