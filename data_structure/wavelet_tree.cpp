@@ -65,8 +65,10 @@ struct WaveletTree {
   int root;
 
   WaveletTree(vector<T> data) {
+    nodes.reserve(data.size() * 3);
     root = build(move(data));
   }
+
 
   int build(vector<T> data) {
     if (data.empty()) return -1;
@@ -95,6 +97,28 @@ struct WaveletTree {
       nodes[id].left_count.push_back(cnt);
     }
 
+    if (n > 14 && std::max(cnt, n - cnt) * 5 > n * 4) {
+      // detected unbalanced split, pick med of random elements
+      int a, b, c;
+      unsigned int r;
+      r = rand(); r *= RAND_MAX; r += rand();
+      a = r % n;
+      r = rand(); r *= RAND_MAX; r += rand();
+      b = r % n;
+      r = rand(); r *= RAND_MAX; r += rand();
+      c = r % n;
+      mid = median3(data[a], data[b], data[c]);
+      if (mid == max) mid--;
+
+      nodes[id].left_count.clear();
+      cnt = 0;
+      nodes[id].left_count.push_back(cnt);
+      for (int i = 0; i < n; i++) {
+        if (data[i] <= mid) cnt++;
+        nodes[id].left_count.push_back(cnt);
+      }
+    }
+
     vector<T> left, right;
     left.reserve(cnt), right.reserve(n - cnt);
     for (int i = 0; i < n; i++) {
@@ -120,6 +144,14 @@ struct WaveletTree {
     nodes[id].left = left_child;
     nodes[id].right = right_child;
     return id;
+  }
+  T median3(T a, T b, T c) {
+    if (a < b) {
+      if (b < c) return b;
+      return (a < c) ? c : a;
+    }
+    if (a < c) return a;
+    return (b < c) ? c : b;
   }
 
   // count values in subarray[s, e) that are <= key
@@ -218,6 +250,19 @@ auto make_wavelet(vector<T> data) {
 }
 
 int main() {
+  {
+    // heavy allocation
+    vector<int> b;
+    for (int i = 0; i < 1000000; i++) {
+      b.push_back(i);
+    }
+    for (int i = 0; i < 1000; i++) {
+      b.push_back(1000000000 / 1000 * i);
+    }
+    random_shuffle(b.begin(), b.end());
+    auto tt = make_wavelet(b);
+    printf("%d, size=%d\n", (int)clock(), (int)tt.nodes.size());
+  }
   {
     // test build
     vector<int> a = { 1,2,3,4,5 };
