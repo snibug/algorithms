@@ -44,7 +44,7 @@ struct MaxFlowDinic
 		graph.resize(n);
 	}
 	void AddEdge(int s, int e, flow_t cap, flow_t caprev = 0) {
-		Edge forward = { e, graph[e].size(), cap };
+		Edge forward = { e, graph[e].size() + (s == e ? 1 : 0), cap };
 		Edge reverse = { s, graph[s].size(), caprev };
 		graph[s].push_back(forward);
 		graph[e].push_back(reverse);
