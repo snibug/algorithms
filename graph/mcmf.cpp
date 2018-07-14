@@ -31,7 +31,7 @@ struct MinCostFlow
 		cost_t cost;
 		cap_t residual_capacity;
 		cap_t orig_capacity;
-		size_t revid;
+		int revid;
 	};
 
 	int n;
@@ -40,11 +40,13 @@ struct MinCostFlow
 	bool needNormalize;
 
 	MinCostFlow(int n) : graph(n), n(n), pi(n, 0), needNormalize(false) {}
+	// 한참 돌리던 중간에 추가하는 경우는 고려 안 함
 	void addEdge(int s, int e, cost_t cost, cap_t cap)
 	{
-		if (s == e) return;
-		edge forward={e, cost, cap, cap, graph[e].size()};
-		edge backward={s, -cost, 0, 0, graph[s].size()};
+		int forward_rev = graph[e].size() + ((s == e) ? 1 : 0);
+		int backward_rev = graph[s].size();
+		edge forward={e, cost, cap, cap, forward_rev};
+		edge backward={s, -cost, 0, 0, backward_rev};
 		if (cost < 0) {
 			needNormalize = true;
 		}
