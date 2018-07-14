@@ -1,118 +1,182 @@
 #include <cstdio>
-#include <limits>
-#include <vector>
-#include <climits>
 #include <algorithm>
+#include <cstdlib>
+#include <cmath>
+#include <climits>
+#include <cstring>
+#include <string>
+#include <vector>
+#include <queue>
+#include <numeric>
+#include <functional>
+#include <set>
+#include <map>
+#include <unordered_map>
+#include <unordered_set>
+#include <memory>
+#include <thread>
+#include <tuple>
+#include <limits>
 
 using namespace std;
 
-// Tests
-// http://www.spoj.com/problems/GREED/
-// https://www.acmicpc.net/problem/8992
-// SRM 506 mid
 
-namespace hung
+/*
+Tests
+http://www.spoj.com/problems/GREED/
+https://www.acmicpc.net/problem/8992
+SRM 506 mid
+
+Time complexity O(n^3)
+
+Usage
+MinWeightBipartiteMatch matcher(n);
+for (int i = 0; i < n; i++) for (int j = 0; j < n; j++) matcher.weights[i][j] = SOMETHING;
+cost_t total = matcher.solve();
+
+See matcher.match(row -> col) and matcher.matched(col -> row) for actual match
+*/
+
+struct MinWeightBipartiteMatch
 {
-	/*
-	 * alternative cost_t example
-	 *
-	typedef pair<int,int> cost_t;
-	cost_t MAX_COST = make_pair(2,0);
-	pair<int,int> &operator += (pair<int,int> &a, const pair<int,int> &b) {
-		a.first += b.first; a.second += b.second;
-		return a;
-	}
-	pair<int,int> &operator -= (pair<int,int> &a, const pair<int,int> &b) {
-		a.first -= b.first; a.second -= b.second;
-		return a;
-	}
-	*/
-	typedef int cost_t;
-	cost_t MAX_COST = numeric_limits<cost_t>::max()/2;
-	// input: n, dat(which is NOT const)
-	// output: call solve(), match, matched
-	// minimum matching 계산이다.
-	const int MAX_N = 500;
+  typedef long long cost_t;
 
-	int n, match[MAX_N], matched[MAX_N];
-	cost_t dat[MAX_N][MAX_N];
-	int q[MAX_N], v[MAX_N], vcnt;
-	int f[MAX_N], reach[MAX_N], reach2[MAX_N], rcnt;
+  cost_t max_cost() const { return numeric_limits<cost_t>::max(); }
 
-	int augment(int r){
-		int h,t=0;
-		v[r] = ++vcnt;
-		q[t++] = r;
-		for(h=0;h<t;h++){
-			int qh = q[h];
-			for(int j=0;j<n;j++) {
-				if (dat[qh][j] != 0) continue;
-				int next = matched[j];
-				if (next == -1) {
-					for(;;){
-						int org = match[qh];
-						match[qh] = j; matched[j] = qh;
-						if(qh==r) return 1;
-						qh=f[qh]; j = org;
-					}
-				} else if(v[next] != vcnt) {
-					v[next] = vcnt, f[next] = qh, q[t++] = next;
-				}
-			}
-		}
-		for(int i=0;i<n;i++)
-			if (v[i] == vcnt) {
-				reach[i] = rcnt;
-				if (i != r) reach2[match[i]] = rcnt;
-			}
-		return 0;
-	}
+  // input
+  int n;
+  vector<vector<cost_t>> weights;
+  // output
+  vector<int> match, matched;
 
-	cost_t solve() {
-		cost_t ans = 0;
-		for(int i=0;i<n;i++) match[i] = matched[i] = -1;
-		for(int i=0;i<n;i++) {
-			cost_t minv = *min_element(dat[i],dat[i]+n);
-			for(int j = 0;j < n;j++) dat[i][j] -= minv;
-			ans += minv;
-			minv = dat[0][i];
-			for(int j=1;j<n;j++) minv = min(minv, dat[j][i]);
-			for(int j=0;j<n;j++) dat[j][i] -= minv;
-			ans += minv;
-		}
-		for(;;) {
-			++rcnt;
-			bool needMore = false;
-			for(int i=0;i<n;i++) {
-				if (match[i] >= 0) continue;
-				if (!augment(i)) needMore = true;
-			}
-			if(!needMore) break;
-			cost_t minv = MAX_COST;
-			for(int i=0;i<n;i++) {
-				if (reach[i]!=rcnt) continue;
-				for(int j=0;j<n; j++) {
-					if (reach2[j]==rcnt) continue;
-					minv = min(minv, dat[i][j]);
-				}
-			}
-			for(int i=0;i<n;i++) {
-				if (match[i]<0) ans += minv;
-				for(int j=0;j<n;j++) {
-					if (reach[i]!=rcnt) dat[i][j] += minv;
-					if (reach2[j]!=rcnt) dat[i][j] -= minv;
-				}
-			}
-		}
-		return ans;
-	}
-}
+  MinWeightBipartiteMatch(int n) :
+    n(n), match(n), matched(n), weights(n, vector<cost_t>(n))
+  {
 
-int main() {
-	int ans = 0;
-	scanf("%d",&hung::n);
-	int n = hung::n;
-	for(int i=0;i<n;i++) for(int j=0;j<n;j++) scanf("%d",&hung::dat[i][j]);
-	printf("%d", hung::solve());
-	return 0;
-}
+  }
+
+  void resize(int n) {
+    this->n = n;
+    match.resize(n);
+    matched.resize(n);
+    weights.resize(n);
+    for (int i = 0; i < n; i++) {
+      weights[i].resize(n);
+    }
+  }
+
+  /* for solve() */
+  vector<cost_t> slack;
+  vector<cost_t> potential_row, potential_col;
+  vector<int> reach_row, reach_col;
+  int rcnt;
+  vector<int> from;
+  void found_match(int r, int c) {
+    do {
+      int old_match = match[r];
+      match[r] = c;
+      matched[c] = r;
+      tie(r, c) = make_pair(from[r], old_match);
+    } while (r >= 0 && c >= 0);
+  }
+
+  void augment(int row_to_match) {
+    slack.resize(n);
+    for (int c = 0; c < n; c++) {
+      slack[c] = weights[row_to_match][c] - potential_row[row_to_match] - potential_col[c];
+    }
+    ++rcnt;
+    vector<int> q; q.reserve(n);
+    int h = 0;
+    q.push_back(row_to_match);
+    reach_row[row_to_match] = rcnt;
+    from[row_to_match] = -1;
+    for (;;) {
+      while (h < q.size()) {
+        int r = q[h++];
+        for (int c = 0; c < n; c++) {
+          cost_t gap = weights[r][c] - potential_row[r] - potential_col[c];
+          slack[c] = min(slack[c], gap);
+          if (gap != cost_t()) continue;
+          int next = matched[c];
+          if (next < 0) {
+            found_match(r, c);
+            return;
+          }
+          reach_col[c] = rcnt;
+          if (reach_row[next] == rcnt) continue;
+          q.push_back(next);
+          reach_row[next] = rcnt;
+          from[next] = r;
+        }
+      }
+      cost_t delta = max_cost();
+      for (int c = 0; c < n; c++) {
+        if (reach_col[c] == rcnt) continue; // non-covered -> continue
+        delta = min(delta, slack[c]);
+      }
+      for (int r = 0; r < n; r++) {
+        if (reach_row[r] == rcnt) continue;
+        potential_row[r] -= delta;
+      }
+      for (int c = 0; c < n; c++) {
+        if (reach_col[c] == rcnt) continue;
+        potential_col[c] += delta;
+        slack[c] -= delta;
+      }
+      int lastsize = q.size();
+      for (int c = 0; c < n; c++) {
+        if (reach_col[c] == rcnt) continue;
+        if (slack[c] != cost_t()) continue;
+        int next = matched[c];
+        if (next >= 0 && reach_row[next] == rcnt) continue;
+        for (int qi = 0; qi < lastsize; qi++) {
+          int r = q[qi];
+          cost_t gap = weights[r][c] - potential_row[r] - potential_col[c];
+          if (gap != cost_t()) continue;
+          if (next < 0) {
+            found_match(r, c);
+            return;
+          }
+          reach_col[c] = rcnt;
+          q.push_back(next);
+          reach_row[next] = rcnt;
+          from[next] = r;
+          break;
+        }
+      }
+    }
+  }
+
+  void initialize() {
+    potential_row.assign(n, cost_t());
+    potential_col.assign(n, cost_t());
+    match.assign(n, -1);
+    matched.assign(n, -1);
+    reach_row.assign(n, 0);
+    reach_col.assign(n, 0);
+    from.resize(n);
+    rcnt = 1;
+    for (int i = 0; i < n; i++) {
+      cost_t row_min_weight = *min_element(weights[i].begin(), weights[i].end());
+      potential_row[i] = row_min_weight;
+    }
+    for (int i = 0; i < n; i++) {
+      cost_t col_min_weight = weights[0][i] - potential_row[0];
+      for (int j = 1; j < n; j++) col_min_weight = min(col_min_weight, weights[j][i] - potential_row[j]);
+      potential_col[i] = col_min_weight;
+    }
+  }
+
+  cost_t solve() {
+    initialize();
+    for (int row_to_match = 0; row_to_match < n; row_to_match++) {
+      augment(row_to_match);
+    }
+    cost_t ans = cost_t();
+    for (auto v : potential_row) ans += v;
+    for (auto v : potential_col) ans += v;
+    return ans;
+  }
+};
+
