@@ -185,7 +185,7 @@ struct MaxMatching {
 		if (level[v] & 1) {
 			// odd. use bridge
 			int x, y, mate = matched[v];
-			tie(x,y) = tie(bridge[v].first, bridge[v].second);
+			tie(x, y) = make_pair(bridge[v].first, bridge[v].second);
 			getRootPath(x, mate, !reversed);
 			getRootPath(y, w, reversed);
 			if (reversed) {

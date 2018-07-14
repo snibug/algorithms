@@ -144,12 +144,12 @@ struct WaveletTree {
       int left_s = cur.left_count[s], left_e = cur.left_count[e];
       if (key <= left.max) {
         idx = cur.left;
-        tie(s, e) = tie(left_s, left_e);
+        tie(s, e) = make_pair(left_s, left_e);
       }
       else {
         int right_s = s - left_s, right_e = e - left_e;
         idx = cur.right;
-        tie(s, e) = tie(right_s, right_e);
+        tie(s, e) = make_pair(right_s, right_e);
       }
     }
   }
@@ -189,13 +189,13 @@ struct WaveletTree {
       int left_cnt = left_e - left_s;
       if (rank < left_cnt) {
         idx = cur.left;
-        tie(s, e) = tie(left_s, left_e);
+        tie(s, e) = make_pair(left_s, left_e);
       }
       else {
         int right_s = s - left_s, right_e = e - left_e;
         rank -= left_cnt;
         idx = cur.right;
-        tie(s, e) = tie(right_s, right_e);
+        tie(s, e) = make_pair(right_s, right_e);
       }
     }
   }
