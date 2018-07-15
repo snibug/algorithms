@@ -31,3 +31,10 @@ Graph theory
 
 Arboricity - partition edges into forests. minimum number of forests. Special case of matroid partitioning
 Matroid Partitioning - max flow of edges as nodes
+
+
+Ineqaulities to shortest path problem
+=====================================
+
+For x(i) <= x(j) + c, draw an edge from j to i with cost c. If there is negative loop, it's not possible
+Start node becomes 0, so create an artifical start node. Then you can handle x(i) <= 0 + c, 0 <= x(i) + c
