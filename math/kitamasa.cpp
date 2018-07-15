@@ -1,3 +1,4 @@
+//// old implementation, use FastLinearRecurrence
 #include <cstdio>
 #include <numeric>
 #include <vector>
