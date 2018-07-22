@@ -33,17 +33,19 @@ tuple<long long, long long, long long> extended_gcd(long long a, long long b) {
 	return make_tuple(a, s, t);
 }
 
+/* returns (c, d), ac + bd = gcd */
 pair<long long, long long> extended_gcd_rec(long long a, long long b) {
 	if (b == 0) return make_pair(1, 0);
 	pair<long long, long long> t = extended_gcd_rec(b, a % b);
 	return make_pair(t.second, t.first - t.second * (a / b));
 }
 
-
 /* Find x in [0,m) s.t. ax ≡ gcd(a, m) (mod m)
  * Assumption: m > 0
  * Dependencies: extended_gcd(a, b) */
 long long modinverse(long long a, long long m) {
+	a = a % m;
+	if (a < 0) a += m;
 	long long value = get<1>(extended_gcd(a, m)) % m;
 	return (value < 0) ? value + m : value;
 }
