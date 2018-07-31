@@ -55,7 +55,7 @@ struct PersistentPointUpdateRangeQuery {
         return roots[previousUpdateCount];
     }
 
-    // val_t F(const val_t &original_leaf_value, OP operand, int pos)
+    /// val_t F(const val_t &original_leaf_value, OP operand, int pos)
     template<typename OP, typename F>
     void setPoint(const int old_root, const int pos, OP operand, F leafOperation) {
         const int new_root = appendNewNode();
@@ -98,6 +98,31 @@ struct PersistentPointUpdateRangeQuery {
 
             subtreeOperation(new_p, pos_min, pos_max);
         }
+    }
+
+    /// bool F(root1_left_value, root2_left_value, root1_right_value, root2_right_value, pos_min, pos_mid, pos_max)
+    /// if F is true, go to left subtree.
+    template<typename F>
+    int followCondition(const int root1, const int root2, F goLeft) {
+        int p = root1, q = root2;
+        int pos_min = 0, pos_max = size - 1;
+        while (pos_min != pos_max) {
+            const int pos_mid = (pos_min + pos_max) >> 1;
+            if (goLeft(
+                    nodes[nodes[p].left].value, nodes[nodes[q].left].value,
+                    nodes[nodes[p].right].value, nodes[nodes[q].right].value,
+                    pos_min, pos_mid, pos_max
+            )) {
+                p = nodes[p].left;
+                q = nodes[q].left;
+                pos_max = pos_mid;
+            } else {
+                p = nodes[p].right;
+                q = nodes[q].right;
+                pos_min = pos_mid + 1;
+            }
+        }
+        return pos_min;
     }
 
     result_t queryRange(const int root, const int pos_min, const int pos_max) const {
@@ -183,6 +208,77 @@ private:
         return left + right;
     }
 };
+
+// example operations
+int solveXor(PersistentPointUpdateRangeQuery<int> &pstree, int l, int r, int x) {
+    return pstree.followCondition(pstree.getRoot(l - 1), pstree.getRoot(r), [x](
+            int l1, int l2,
+            int r1, int r2,
+            int p1, int p2, int p3
+            ) {
+        int bit = p2 + 1 - p1;
+        if (x & bit) {
+            return l1 != l2;
+        } else {
+            return r1 == r2;
+        }
+    });
+}
+
+int solveLE(PersistentPointUpdateRangeQuery<int> &pstree, int l, int r, int x) {
+    int lcnt = pstree.queryRange(pstree.getRoot(l - 1), 0, x);
+    int rcnt = pstree.queryRange(pstree.getRoot(r), 0, x);
+    return rcnt - lcnt;
+}
+
+int solvekth(PersistentPointUpdateRangeQuery<int> &pstree, int l, int r, int x) {
+    return pstree.followCondition(pstree.getRoot(l - 1), pstree.getRoot(r), [&x](
+            int l1, int l2,
+            int r1, int r2,
+            int p1, int p2, int p3
+    ) {
+        int leftSubtree = l2 - l1;
+        if (leftSubtree >= x) {
+            return true;
+        }
+        x -= leftSubtree;
+        return false;
+    });
+}
+
+int solve13538() { //baekjoon test
+    int m;
+    scanf("%d",&m);
+    PersistentPointUpdateRangeQuery<int> pstree(500001, 500001);
+    while(m-->0) {
+        int command;
+        scanf("%d",&command);
+        if (command == 1) {
+            int x;
+            scanf("%d", &x);
+            pstree.setPoint(pstree.getRoot(), x, 1, [](const int &val, int operand, int pos) {
+                return val + operand;
+            });
+        } else if (command == 2) {
+            int l, r, x;
+            scanf("%d%d%d", &l, &r, &x);
+            printf("%d\n", solveXor(pstree, l, r, x));
+        } else if (command == 3) {
+            int k;
+            scanf("%d", &k);
+            pstree.roots.resize(pstree.roots.size() - k);
+        } else if (command == 4) {
+            int l, r, x;
+            scanf("%d%d%d", &l, &r, &x);
+            printf("%d\n", solveLE(pstree, l, r, x));
+        } else if (command == 5) {
+            int l, r, x;
+            scanf("%d%d%d", &l, &r, &x);
+            printf("%d\n", solvekth(pstree, l, r, x));
+        }
+    }
+	return 0;
+}
 
 int testPersistentPointUpdateRangeQuery() {
     const int testSize = 128;
